@@ -1,3 +1,4 @@
+#[cfg(not(feature = "certified_subset"))]
 use core::fmt;
 
 #[cfg(feature = "alloc")]
@@ -7,7 +8,7 @@ use alloc::string::ToString;
 use alloc::boxed::Box;
 
 /// Encoding error.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Error<E> {
     err: ErrorImpl<E>,
     #[cfg(not(feature = "alloc"))]
@@ -105,7 +106,7 @@ impl<E> Error<E> {
 }
 
 /// Internal error representation.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 enum ErrorImpl<E> {
     /// Error writing bytes to a `Write` impl.
     Write(E),
@@ -116,6 +117,7 @@ enum ErrorImpl<E> {
     Custom(Box<dyn core::error::Error + Send + Sync>)
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl<E: fmt::Display> fmt::Display for Error<E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self.err {
@@ -145,6 +147,7 @@ impl<E: fmt::Display> fmt::Display for Error<E> {
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl<E: core::error::Error + 'static> core::error::Error for Error<E> {
     fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
         match &self.err {

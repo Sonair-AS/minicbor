@@ -1,4 +1,6 @@
-use core::{fmt, str};
+use core::str;
+#[cfg(not(feature = "certified_subset"))]
+use core::fmt;
 use crate::data::{Tag, Type};
 
 #[cfg(feature = "alloc")]
@@ -8,7 +10,7 @@ use alloc::string::ToString;
 use alloc::boxed::Box;
 
 /// Decoding error.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Error {
     err: ErrorImpl,
     pos: Option<usize>,
@@ -196,7 +198,7 @@ impl Error {
 }
 
 /// Internal error representation.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 enum ErrorImpl {
     /// Decoding has (unexpectedly) reached the end of the input slice.
     EndOfInput,
@@ -221,6 +223,7 @@ enum ErrorImpl {
     Custom(Box<dyn core::error::Error + Send + Sync>)
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self.err {
@@ -307,6 +310,7 @@ impl fmt::Display for Error {
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl core::error::Error for Error {
     fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
         match &self.err {

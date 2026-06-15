@@ -3,7 +3,8 @@ use crate::data::{Int, Tag};
 use crate::encode::{Encode, Error, Write};
 
 /// A non-allocating CBOR encoder writing encoded bytes to the given [`Write`] sink.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Encoder<W> { writer: W }
 
 impl<W: Write> Encoder<W> {
@@ -187,13 +188,17 @@ impl<W: Write> Encoder<W> {
     }
 
     /// Encode an `f32` value.
+    #[allow(unnecessary_transmutes)]
     pub fn f32(&mut self, x: f32) -> Result<&mut Self, Error<W::Error>> {
-        self.put(&[SIMPLE | 26])?.put(&x.to_be_bytes()[..])
+        let bits: u32 = unsafe { core::mem::transmute(x) };
+        self.put(&[SIMPLE | 26])?.put(&bits.to_be_bytes()[..])
     }
 
     /// Encode an `f64` value.
+    #[allow(unnecessary_transmutes)]
     pub fn f64(&mut self, x: f64) -> Result<&mut Self, Error<W::Error>> {
-        self.put(&[SIMPLE | 27])?.put(&x.to_be_bytes()[..])
+        let bits: u64 = unsafe { core::mem::transmute(x) };
+        self.put(&[SIMPLE | 27])?.put(&bits.to_be_bytes()[..])
     }
 
     /// Encode a `bool` value.
@@ -203,7 +208,7 @@ impl<W: Write> Encoder<W> {
 
     /// Encode a `char` value.
     pub fn char(&mut self, x: char) -> Result<&mut Self, Error<W::Error>> {
-        self.u32(u32::from(x))
+        self.u32(x as u32)
     }
 
     /// Encode a CBOR tag.

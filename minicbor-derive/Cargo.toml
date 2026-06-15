@@ -17,9 +17,9 @@ alloc = [] # unused
 std   = [] # unused
 
 [dependencies]
-proc-macro2 = "1.0.106"
-quote       = "1.0.44"
-syn         = { version = "2.0.114", features = ["derive", "extra-traits", "visit"] }
+proc-macro2 = { git = "https://github.com/Sonair-AS/proc-macro2.git", branch = "certified_subset" }
+quote       = { git = "https://github.com/Sonair-AS/quote.git", branch = "certified_subset" }
+syn         = { git = "https://github.com/Sonair-AS/syn.git", branch = "certified_subset", features = ["derive", "extra-traits", "visit"] }
 
 [dev-dependencies]
 minicbor = { path = "../minicbor", features = ["std", "derive"] }

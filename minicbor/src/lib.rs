@@ -135,6 +135,7 @@
 
 #![forbid(unused_variables)]
 #![allow(clippy::needless_lifetimes)]
+#![cfg_attr(feature = "certified_subset", allow(dead_code, unused_imports))]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "alloc")]

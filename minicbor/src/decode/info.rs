@@ -17,7 +17,8 @@ use super::{decoder::{info_of, type_of}, Error};
 /// assert_eq!(Size::Items(5), size);
 /// # Ok::<_, Box<dyn core::error::Error>>(())
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub enum Size {
     /// The item consists only of the head.
     Head,

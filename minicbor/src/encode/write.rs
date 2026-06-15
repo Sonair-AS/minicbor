@@ -23,7 +23,7 @@ impl Write for &mut [u8] {
         if self.len() < buf.len() {
             return Err(EndOfSlice(()))
         }
-        let this = core::mem::take(self);
+        let this = core::mem::replace(self, &mut []);
         let (prefix, suffix) = this.split_at_mut(buf.len());
         prefix.copy_from_slice(buf);
         *self = suffix;
@@ -42,7 +42,7 @@ impl Write for alloc::vec::Vec<u8> {
 }
 
 /// Wrapper around a `Write` impl that keeps track of the write position.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Cursor<W> {
     wrt: W,
     pos: usize
@@ -121,7 +121,7 @@ impl Write for Cursor<alloc::boxed::Box<[u8]>> {
 
 /// An adapter for `std::io::Write` types that implements [`Write`].
 #[cfg(feature = "std")]
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Writer<W>(W);
 
 #[cfg(feature = "std")]
@@ -156,25 +156,29 @@ impl<W: std::io::Write> Write for Writer<W> {
 }
 
 /// An error indicating the end of a slice.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct EndOfSlice(());
 
+#[cfg(not(feature = "certified_subset"))]
 impl core::fmt::Display for EndOfSlice {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         f.write_str("end of slice")
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl core::error::Error for EndOfSlice {}
 
 /// An error indicating the end of an array.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct EndOfArray(());
 
+#[cfg(not(feature = "certified_subset"))]
 impl core::fmt::Display for EndOfArray {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         f.write_str("end of array")
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl core::error::Error for EndOfArray {}

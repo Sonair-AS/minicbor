@@ -254,6 +254,7 @@ impl<'b, C> Decode<'b, C> for () {
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl<'b, C, T: Decode<'b, C>> Decode<'b, C> for core::num::Wrapping<T> {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
         d.decode_with(ctx).map(core::num::Wrapping)
@@ -361,6 +362,10 @@ decode_nonzero! {
     core::num::NonZeroU16, "unexpected 0 when decoding a `NonZeroU16`"
     core::num::NonZeroU32, "unexpected 0 when decoding a `NonZeroU32`"
     core::num::NonZeroU64, "unexpected 0 when decoding a `NonZeroU64`"
+}
+
+#[cfg(not(feature = "certified_subset"))]
+decode_nonzero! {
     core::num::NonZeroI8,  "unexpected 0 when decoding a `NonZeroI8`"
     core::num::NonZeroI16, "unexpected 0 when decoding a `NonZeroI16`"
     core::num::NonZeroI32, "unexpected 0 when decoding a `NonZeroI32`"
@@ -370,6 +375,13 @@ decode_nonzero! {
 #[cfg(any(target_pointer_width = "16", target_pointer_width = "32", target_pointer_width = "64"))]
 decode_nonzero! {
     core::num::NonZeroUsize,  "unexpected 0 when decoding a `NonZeroUsize`"
+}
+
+#[cfg(all(
+    not(feature = "certified_subset"),
+    any(target_pointer_width = "16", target_pointer_width = "32", target_pointer_width = "64")
+))]
+decode_nonzero! {
     core::num::NonZeroIsize,  "unexpected 0 when decoding a `NonZeroIsize`"
 }
 
@@ -396,30 +408,50 @@ macro_rules! decode_atomic {
 decode_atomic! {
     core::sync::atomic::AtomicBool
     core::sync::atomic::AtomicU8
+}
+
+#[cfg(all(not(feature = "certified_subset"), target_has_atomic = "8"))]
+decode_atomic! {
     core::sync::atomic::AtomicI8
 }
 
 #[cfg(target_has_atomic = "16")]
 decode_atomic! {
     core::sync::atomic::AtomicU16
+}
+
+#[cfg(all(not(feature = "certified_subset"), target_has_atomic = "16"))]
+decode_atomic! {
     core::sync::atomic::AtomicI16
 }
 
 #[cfg(target_has_atomic = "32")]
 decode_atomic! {
     core::sync::atomic::AtomicU32
+}
+
+#[cfg(all(not(feature = "certified_subset"), target_has_atomic = "32"))]
+decode_atomic! {
     core::sync::atomic::AtomicI32
 }
 
 #[cfg(target_has_atomic = "64")]
 decode_atomic! {
     core::sync::atomic::AtomicU64
+}
+
+#[cfg(all(not(feature = "certified_subset"), target_has_atomic = "64"))]
+decode_atomic! {
     core::sync::atomic::AtomicI64
 }
 
 #[cfg(target_has_atomic = "ptr")]
 decode_atomic! {
     core::sync::atomic::AtomicUsize
+}
+
+#[cfg(all(not(feature = "certified_subset"), target_has_atomic = "ptr"))]
+decode_atomic! {
     core::sync::atomic::AtomicIsize
 }
 

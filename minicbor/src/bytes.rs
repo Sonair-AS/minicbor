@@ -29,7 +29,8 @@ use alloc::{boxed::Box, borrow::{Cow, ToOwned}};
 /// Used to implement `Encode` and `Decode` which translate to
 /// CBOR bytes instead of arrays for `u8`s.
 #[repr(transparent)]
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug, PartialOrd, Ord, Hash))]
 pub struct ByteSlice([u8]);
 
 impl<'a> From<&'a [u8]> for &'a ByteSlice {
@@ -147,7 +148,8 @@ impl alloc::borrow::ToOwned for ByteSlice {
 /// Used to implement `Encode` and `Decode` which translate to
 /// CBOR bytes instead of arrays for `u8`s.
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug, PartialOrd, Ord, Hash))]
 pub struct ByteArray<const N: usize>([u8; N]);
 
 impl<const N: usize> From<[u8; N]> for ByteArray<N> {
@@ -216,7 +218,8 @@ impl<C, const N: usize> CborLen<C> for ByteArray<N> {
 /// Used to implement `Encode` and `Decode` which translate to
 /// CBOR bytes instead of arrays for `u8`s.
 #[cfg(feature = "alloc")]
-#[derive(Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct ByteVec(Vec<u8>);
 
 #[cfg(feature = "alloc")]

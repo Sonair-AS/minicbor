@@ -10,7 +10,8 @@ use core::ops::{Deref, DerefMut};
 pub use token::Token;
 
 /// CBOR data types.
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub enum Type {
     Bool,
     Null,
@@ -41,6 +42,7 @@ pub enum Type {
     Unknown(u8)
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -78,7 +80,8 @@ impl fmt::Display for Type {
 /// CBOR data item tag.
 ///
 /// See [`IanaTag`] for currently known tag values which have been registered.
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Tag(u64);
 
 impl Tag {
@@ -103,6 +106,7 @@ impl From<&Tag> for u64 {
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
@@ -112,7 +116,8 @@ impl fmt::Display for Tag {
 /// IANA registered tags.
 ///
 /// See <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml> for details.
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 #[non_exhaustive]
 pub enum IanaTag {
     DateTime,
@@ -283,15 +288,17 @@ impl From<&IanaTag> for u64 {
 }
 
 /// Error indicating that a tag value is unknown to [`IanaTag`].
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct UnknownTag(Tag);
 
+#[cfg(not(feature = "certified_subset"))]
 impl fmt::Display for UnknownTag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "unknown tag: {:#x}", self.0.as_u64())
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl core::error::Error for UnknownTag {}
 
 
@@ -315,7 +322,8 @@ impl core::error::Error for UnknownTag {}
 /// # Ok::<_, Box<dyn core::error::Error>>(())
 ///
 /// ```
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Tagged<const N: u64, T>(T);
 
 impl<const N: u64, T> Tagged<N, T> {
@@ -368,7 +376,8 @@ impl<const N: u64, T> DerefMut for Tagged<N, T> {
 /// CBOR integers keep the sign bit in the major type so there is one extra bit
 /// available for signed numbers compared to Rust's integer types. This type can
 /// be used to encode and decode the full CBOR integer range.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Int { neg: bool, val: u64 }
 
 /// Max. CBOR integer value (2<sup>64</sup> - 1).
@@ -395,6 +404,7 @@ impl Int {
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl fmt::Display for Int {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", i128::from(*self))
@@ -405,19 +415,19 @@ impl fmt::Display for Int {
 
 impl From<u8> for Int {
     fn from(i: u8) -> Self {
-        Int::from(u64::from(i))
+        Int::pos(i as u64)
     }
 }
 
 impl From<u16> for Int {
     fn from(i: u16) -> Self {
-        Int::from(u64::from(i))
+        Int::pos(i as u64)
     }
 }
 
 impl From<u32> for Int {
     fn from(i: u32) -> Self {
-        Int::from(u64::from(i))
+        Int::pos(i as u64)
     }
 }
 
@@ -431,25 +441,29 @@ impl TryFrom<u128> for Int {
     type Error = TryFromIntError;
 
     fn try_from(i: u128) -> Result<Self, Self::Error> {
-        Ok(Int::from(u64::try_from(i).map_err(|_| TryFromIntError("u64"))?))
+        if i > u64::MAX as u128 {
+            Err(TryFromIntError("u64"))
+        } else {
+            Ok(Int::pos(i as u64))
+        }
     }
 }
 
 impl From<i8> for Int {
     fn from(i: i8) -> Self {
-        Int::from(i64::from(i))
+        Int::from(i as i64)
     }
 }
 
 impl From<i16> for Int {
     fn from(i: i16) -> Self {
-        Int::from(i64::from(i))
+        Int::from(i as i64)
     }
 }
 
 impl From<i32> for Int {
     fn from(i: i32) -> Self {
-        Int::from(i64::from(i))
+        Int::from(i as i64)
     }
 }
 
@@ -487,7 +501,12 @@ impl TryFrom<Int> for u8 {
     type Error = TryFromIntError;
 
     fn try_from(i: Int) -> Result<Self, Self::Error> {
-        u64::try_from(i).and_then(|n| u8::try_from(n).map_err(|_| TryFromIntError("u8")))
+        let n = u64::try_from(i)?;
+        if n > u8::MAX as u64 {
+            Err(TryFromIntError("u8"))
+        } else {
+            Ok(n as u8)
+        }
     }
 }
 
@@ -495,7 +514,12 @@ impl TryFrom<Int> for u16 {
     type Error = TryFromIntError;
 
     fn try_from(i: Int) -> Result<Self, Self::Error> {
-        u64::try_from(i).and_then(|n| u16::try_from(n).map_err(|_| TryFromIntError("u16")))
+        let n = u64::try_from(i)?;
+        if n > u16::MAX as u64 {
+            Err(TryFromIntError("u16"))
+        } else {
+            Ok(n as u16)
+        }
     }
 }
 
@@ -503,7 +527,12 @@ impl TryFrom<Int> for u32 {
     type Error = TryFromIntError;
 
     fn try_from(i: Int) -> Result<Self, Self::Error> {
-        u64::try_from(i).and_then(|n| u32::try_from(n).map_err(|_| TryFromIntError("u32")))
+        let n = u64::try_from(i)?;
+        if n > u32::MAX as u64 {
+            Err(TryFromIntError("u32"))
+        } else {
+            Ok(n as u32)
+        }
     }
 }
 
@@ -525,7 +554,7 @@ impl TryFrom<Int> for u128 {
         if i.neg {
             return Err(TryFromIntError("u128"))
         }
-        Ok(u128::from(i.val))
+        Ok(i.val as u128)
     }
 }
 
@@ -533,7 +562,12 @@ impl TryFrom<Int> for i8 {
     type Error = TryFromIntError;
 
     fn try_from(i: Int) -> Result<Self, Self::Error> {
-        i64::try_from(i).and_then(|n| i8::try_from(n).map_err(|_| TryFromIntError("i8")))
+        let n = i64::try_from(i)?;
+        if n < i8::MIN as i64 || n > i8::MAX as i64 {
+            Err(TryFromIntError("i8"))
+        } else {
+            Ok(n as i8)
+        }
     }
 }
 
@@ -541,7 +575,12 @@ impl TryFrom<Int> for i16 {
     type Error = TryFromIntError;
 
     fn try_from(i: Int) -> Result<Self, Self::Error> {
-        i64::try_from(i).and_then(|n| i16::try_from(n).map_err(|_| TryFromIntError("i16")))
+        let n = i64::try_from(i)?;
+        if n < i16::MIN as i64 || n > i16::MAX as i64 {
+            Err(TryFromIntError("i16"))
+        } else {
+            Ok(n as i16)
+        }
     }
 }
 
@@ -549,7 +588,12 @@ impl TryFrom<Int> for i32 {
     type Error = TryFromIntError;
 
     fn try_from(i: Int) -> Result<Self, Self::Error> {
-        i64::try_from(i).and_then(|n| i32::try_from(n).map_err(|_| TryFromIntError("i32")))
+        let n = i64::try_from(i)?;
+        if n < i32::MIN as i64 || n > i32::MAX as i64 {
+            Err(TryFromIntError("i32"))
+        } else {
+            Ok(n as i32)
+        }
     }
 }
 
@@ -557,26 +601,34 @@ impl TryFrom<Int> for i64 {
     type Error = TryFromIntError;
 
     fn try_from(i: Int) -> Result<Self, Self::Error> {
-        let j = i64::try_from(i.val).map_err(|_| TryFromIntError("i64"))?;
+        if i.val > i64::MAX as u64 && !i.neg {
+            return Err(TryFromIntError("i64"))
+        }
+        if i.neg && i.val > i64::MAX as u64 {
+            return Err(TryFromIntError("i64"))
+        }
+        let j = i.val as i64;
         Ok(if i.neg { -1 - j } else { j })
     }
 }
 
 impl From<Int> for i128 {
     fn from(i: Int) -> Self {
-        let j = i128::from(i.val);
+        let j = i.val as i128;
         if i.neg { -1 - j } else { j }
     }
 }
 
 /// Error when conversion of a CBOR [`Int`] to another type failed.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct TryFromIntError(&'static str);
 
+#[cfg(not(feature = "certified_subset"))]
 impl fmt::Display for TryFromIntError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "value out of {} range", self.0)
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl core::error::Error for TryFromIntError {}

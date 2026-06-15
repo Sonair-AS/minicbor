@@ -337,12 +337,14 @@ impl<C> CborLen<C> for () {
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl<C, T: Encode<C>> Encode<C> for core::num::Wrapping<T> {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
         self.0.encode(e, ctx)
     }
 }
 
+#[cfg(not(feature = "certified_subset"))]
 impl<C, T: CborLen<C>> CborLen<C> for core::num::Wrapping<T> {
     fn cbor_len(&self, ctx: &mut C) -> usize {
         self.0.cbor_len(ctx)
@@ -610,6 +612,10 @@ encode_nonzero! {
     core::num::NonZeroU16
     core::num::NonZeroU32
     core::num::NonZeroU64
+}
+
+#[cfg(not(feature = "certified_subset"))]
+encode_nonzero! {
     core::num::NonZeroI8
     core::num::NonZeroI16
     core::num::NonZeroI32
@@ -619,6 +625,13 @@ encode_nonzero! {
 #[cfg(any(target_pointer_width = "16", target_pointer_width = "32", target_pointer_width = "64"))]
 encode_nonzero! {
     core::num::NonZeroUsize
+}
+
+#[cfg(all(
+    not(feature = "certified_subset"),
+    any(target_pointer_width = "16", target_pointer_width = "32", target_pointer_width = "64")
+))]
+encode_nonzero! {
     core::num::NonZeroIsize
 }
 
@@ -652,30 +665,50 @@ macro_rules! encode_atomic {
 encode_atomic! {
     core::sync::atomic::AtomicBool
     core::sync::atomic::AtomicU8
+}
+
+#[cfg(all(not(feature = "certified_subset"), target_has_atomic = "8"))]
+encode_atomic! {
     core::sync::atomic::AtomicI8
 }
 
 #[cfg(target_has_atomic = "16")]
 encode_atomic! {
     core::sync::atomic::AtomicU16
+}
+
+#[cfg(all(not(feature = "certified_subset"), target_has_atomic = "16"))]
+encode_atomic! {
     core::sync::atomic::AtomicI16
 }
 
 #[cfg(target_has_atomic = "32")]
 encode_atomic! {
     core::sync::atomic::AtomicU32
+}
+
+#[cfg(all(not(feature = "certified_subset"), target_has_atomic = "32"))]
+encode_atomic! {
     core::sync::atomic::AtomicI32
 }
 
 #[cfg(target_has_atomic = "64")]
 encode_atomic! {
     core::sync::atomic::AtomicU64
+}
+
+#[cfg(all(not(feature = "certified_subset"), target_has_atomic = "64"))]
+encode_atomic! {
     core::sync::atomic::AtomicI64
 }
 
 #[cfg(target_has_atomic = "ptr")]
 encode_atomic! {
     core::sync::atomic::AtomicUsize
+}
+
+#[cfg(all(not(feature = "certified_subset"), target_has_atomic = "ptr"))]
+encode_atomic! {
     core::sync::atomic::AtomicIsize
 }
 
@@ -1067,7 +1100,7 @@ impl<C, T: CborLen<C>> CborLen<C> for core::ops::Bound<T> {
 ///
 /// This type wraps any type implementing [`Iterator`] + [`Clone`] and encodes
 /// the items produced by the iterator as a CBOR array.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct ArrayIter<I>(I);
 
 impl<I> ArrayIter<I> {
@@ -1104,7 +1137,7 @@ where
 ///
 /// This type wraps any type implementing [`Iterator`] + [`Clone`] and encodes
 /// the items produced by the iterator as a CBOR map.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct MapIter<I>(I);
 
 impl<I> MapIter<I> {

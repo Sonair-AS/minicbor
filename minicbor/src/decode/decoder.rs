@@ -6,7 +6,8 @@ use crate::decode::{Decode, Error};
 use core::{marker, str};
 
 /// A non-allocating CBOR decoder.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Decoder<'b> {
     buf: &'b [u8],
     pos: usize
@@ -82,8 +83,8 @@ impl<'b> Decoder<'b> {
     pub fn u16(&mut self) -> Result<u16, Error> {
         let p = self.pos;
         match self.read()? {
-            n @ 0 ..= 0x17 => Ok(u16::from(n)),
-            0x18           => self.read().map(u16::from),
+            n @ 0 ..= 0x17 => Ok(n as u16),
+            0x18           => self.read().map(|n| n as u16),
             0x19           => self.read_array().map(u16::from_be_bytes),
             0x1a           => self.read_array().map(u32::from_be_bytes).and_then(|n| try_as(n, "when converting u32 to u16", p)),
             0x1b           => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to u16", p)),
@@ -95,9 +96,9 @@ impl<'b> Decoder<'b> {
     pub fn u32(&mut self) -> Result<u32, Error> {
         let p = self.pos;
         match self.read()? {
-            n @ 0 ..= 0x17 => Ok(u32::from(n)),
-            0x18           => self.read().map(u32::from),
-            0x19           => self.read_array().map(u16::from_be_bytes).map(u32::from),
+            n @ 0 ..= 0x17 => Ok(n as u32),
+            0x18           => self.read().map(|n| n as u32),
+            0x19           => self.read_array().map(u16::from_be_bytes).map(|n| n as u32),
             0x1a           => self.read_array().map(u32::from_be_bytes),
             0x1b           => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to u32", p)),
             b              => Err(Error::type_mismatch(self.type_of(b)?).at(p).with_message("expected u32"))
@@ -133,13 +134,13 @@ impl<'b> Decoder<'b> {
     pub fn i16(&mut self) -> Result<i16, Error> {
         let p = self.pos;
         match self.read()? {
-            n @ 0x00 ..= 0x17 => Ok(i16::from(n)),
-            0x18              => self.read().map(i16::from),
+            n @ 0x00 ..= 0x17 => Ok(n as i16),
+            0x18              => self.read().map(|n| n as i16),
             0x19              => self.read_array().map(u16::from_be_bytes).and_then(|n| try_as(n, "when converting u16 to i16", p)),
             0x1a              => self.read_array().map(u32::from_be_bytes).and_then(|n| try_as(n, "when converting u32 to i16", p)),
             0x1b              => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to i16", p)),
-            n @ 0x20 ..= 0x37 => Ok(-1 - i16::from(n - 0x20)),
-            0x38              => self.read().map(|n| -1 - i16::from(n)),
+            n @ 0x20 ..= 0x37 => Ok(-1 - (n - 0x20) as i16),
+            0x38              => self.read().map(|n| -1 - n as i16),
             0x39              => self.read_array().map(u16::from_be_bytes).and_then(|n| try_as(n, "when converting u16 to i16", p).map(|n: i16| -1 - n)),
             0x3a              => self.read_array().map(u32::from_be_bytes).and_then(|n| try_as(n, "when converting u32 to i16", p).map(|n: i16| -1 - n)),
             0x3b              => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to i16", p).map(|n: i16| -1 - n)),
@@ -151,14 +152,14 @@ impl<'b> Decoder<'b> {
     pub fn i32(&mut self) -> Result<i32, Error> {
         let p = self.pos;
         match self.read()? {
-            n @ 0x00 ..= 0x17 => Ok(i32::from(n)),
-            0x18              => self.read().map(i32::from),
-            0x19              => self.read_array().map(u16::from_be_bytes).map(i32::from),
+            n @ 0x00 ..= 0x17 => Ok(n as i32),
+            0x18              => self.read().map(|n| n as i32),
+            0x19              => self.read_array().map(u16::from_be_bytes).map(|n| n as i32),
             0x1a              => self.read_array().map(u32::from_be_bytes).and_then(|n| try_as(n, "when converting u32 to i32", p)),
             0x1b              => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to i32", p)),
-            n @ 0x20 ..= 0x37 => Ok(-1 - i32::from(n - 0x20)),
-            0x38              => self.read().map(|n| -1 - i32::from(n)),
-            0x39              => self.read_array().map(u16::from_be_bytes).map(|n| -1 - i32::from(n)),
+            n @ 0x20 ..= 0x37 => Ok(-1 - (n - 0x20) as i32),
+            0x38              => self.read().map(|n| -1 - n as i32),
+            0x39              => self.read_array().map(u16::from_be_bytes).map(|n| -1 - n as i32),
             0x3a              => self.read_array().map(u32::from_be_bytes).and_then(|n| try_as(n, "when converting u32 to i32", p).map(|n: i32| -1 - n)),
             0x3b              => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to i32", p).map(|n: i32| -1 - n)),
             b                 => Err(Error::type_mismatch(self.type_of(b)?).at(p).with_message("expected i32"))
@@ -169,15 +170,15 @@ impl<'b> Decoder<'b> {
     pub fn i64(&mut self) -> Result<i64, Error> {
         let p = self.pos;
         match self.read()? {
-            n @ 0x00 ..= 0x17 => Ok(i64::from(n)),
-            0x18              => self.read().map(i64::from),
-            0x19              => self.read_array().map(u16::from_be_bytes).map(i64::from),
-            0x1a              => self.read_array().map(u32::from_be_bytes).map(i64::from),
+            n @ 0x00 ..= 0x17 => Ok(n as i64),
+            0x18              => self.read().map(|n| n as i64),
+            0x19              => self.read_array().map(u16::from_be_bytes).map(|n| n as i64),
+            0x1a              => self.read_array().map(u32::from_be_bytes).map(|n| n as i64),
             0x1b              => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to i64", p)),
-            n @ 0x20 ..= 0x37 => Ok(-1 - i64::from(n - 0x20)),
-            0x38              => self.read().map(|n| -1 - i64::from(n)),
-            0x39              => self.read_array().map(u16::from_be_bytes).map(|n| -1 - i64::from(n)),
-            0x3a              => self.read_array().map(u32::from_be_bytes).map(|n| -1 - i64::from(n)),
+            n @ 0x20 ..= 0x37 => Ok(-1 - (n - 0x20) as i64),
+            0x38              => self.read().map(|n| -1 - n as i64),
+            0x39              => self.read_array().map(u16::from_be_bytes).map(|n| -1 - n as i64),
+            0x3a              => self.read_array().map(u32::from_be_bytes).map(|n| -1 - n as i64),
             0x3b              => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to i64", p).map(|n: i64| -1 - n)),
             b                 => Err(Error::type_mismatch(self.type_of(b)?).at(p).with_message("expected i64"))
         }
@@ -224,7 +225,8 @@ impl<'b> Decoder<'b> {
             0xf9 => self.f16(),
             0xfa => {
                 self.read()?;
-                Ok(f32::from_be_bytes(self.read_array()?))
+                let bytes: [u8; 4] = self.read_array()?;
+                Ok(f32_from_be_bytes(bytes))
             }
             b => Err(Error::type_mismatch(self.type_of(b)?).at(p).with_message("expected f32"))
         }
@@ -235,11 +237,12 @@ impl<'b> Decoder<'b> {
         let p = self.pos;
         match self.current()? {
             #[cfg(feature = "half")]
-            0xf9 => self.f16().map(f64::from),
-            0xfa => self.f32().map(f64::from),
+            0xf9 => self.f16().map(|n| n as f64),
+            0xfa => self.f32().map(|n| n as f64),
             0xfb => {
                 self.read()?;
-                Ok(f64::from_be_bytes(self.read_array()?))
+                let bytes: [u8; 8] = self.read_array()?;
+                Ok(f64_from_be_bytes(bytes))
             }
             b => Err(Error::type_mismatch(self.type_of(b)?).at(p).with_message("expected f64"))
         }
@@ -249,7 +252,7 @@ impl<'b> Decoder<'b> {
     pub fn char(&mut self) -> Result<char, Error> {
         let p = self.pos;
         let n = self.u32()?;
-        char::from_u32(n).ok_or_else(|| Error::invalid_char(n).at(p))
+        char_from_u32(n).ok_or_else(|| Error::invalid_char(n).at(p))
     }
 
     /// Decode a byte slice.
@@ -651,10 +654,10 @@ impl<'b> Decoder<'b> {
     /// Decode a `u64` value beginning with `b`.
     pub(crate) fn unsigned(&mut self, b: u8, p: usize) -> Result<u64, Error> {
         match b {
-            n @ 0 ..= 0x17 => Ok(u64::from(n)),
-            0x18 => self.read().map(u64::from),
-            0x19 => self.read_array().map(u16::from_be_bytes).map(u64::from),
-            0x1a => self.read_array().map(u32::from_be_bytes).map(u64::from),
+            n @ 0 ..= 0x17 => Ok(n as u64),
+            0x18 => self.read().map(|n| n as u64),
+            0x19 => self.read_array().map(u16::from_be_bytes).map(|n| n as u64),
+            0x1a => self.read_array().map(u32::from_be_bytes).map(|n| n as u64),
             0x1b => self.read_array().map(u64::from_be_bytes),
             _    => Err(Error::type_mismatch(self.type_of(b)?)
                 .with_message("expected u64")
@@ -741,7 +744,7 @@ impl<'b> Decoder<'b> {
 /// An iterator over byte slices.
 ///
 /// Returned from [`Decoder::bytes_iter`].
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct BytesIter<'a, 'b> {
     decoder: &'a mut Decoder<'b>,
     state: State<usize>
@@ -780,7 +783,7 @@ impl<'a, 'b> Iterator for BytesIter<'a, 'b> {
 /// An iterator over string slices.
 ///
 /// Returned from [`Decoder::str_iter`].
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct StrIter<'a, 'b> {
     decoder: &'a mut Decoder<'b>,
     state: State<usize>,
@@ -822,7 +825,7 @@ impl<'a, 'b> Iterator for StrIter<'a, 'b> {
 /// An iterator over array elements.
 ///
 /// Returned from [`Decoder::array_iter`].
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct ArrayIter<'a, 'b, T> {
     decoder: &'a mut Decoder<'b>,
     state: State<u64>,
@@ -858,7 +861,7 @@ impl<'a, 'b, T: Decode<'b, ()>> Iterator for ArrayIter<'a, 'b, T> {
 /// An iterator over array elements.
 ///
 /// Returned from [`Decoder::array_iter_with`].
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct ArrayIterWithCtx<'a, 'b, C, T> {
     decoder: &'a mut Decoder<'b>,
     ctx: &'a mut C,
@@ -895,7 +898,7 @@ impl<'a, 'b, C, T: Decode<'b, C>> Iterator for ArrayIterWithCtx<'a, 'b, C, T> {
 /// An iterator over map entries.
 ///
 /// Returned from [`Decoder::map_iter`].
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct MapIter<'a, 'b, K, V> {
     decoder: &'a mut Decoder<'b>,
     state: State<u64>,
@@ -942,7 +945,7 @@ where
 /// An iterator over map entries.
 ///
 /// Returned from [`Decoder::map_iter_with`].
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct MapIterWithCtx<'a, 'b, C, K, V> {
     decoder: &'a mut Decoder<'b>,
     ctx: &'a mut C,
@@ -988,7 +991,8 @@ where
 }
 
 /// Iterator state.
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 enum State<T> {
     /// Definite length.
     Def(T),
@@ -1015,10 +1019,10 @@ where
     fn into_size_hint(self) -> (usize, Option<usize>) {
         match self {
             Self::Def(n) =>
-                usize::try_from(n)
-                    .ok()
-                    .map(|n| (n, Some(n)))
-                    .unwrap_or_default(),
+                match usize::try_from(n) {
+                    Ok(n) => (n, Some(n)),
+                    Err(_) => (0, None),
+                },
             Self::End   => (0, Some(0)),
             Self::Indef => (0, None)
         }
@@ -1036,7 +1040,7 @@ where
 // independent of the current implementation.
 // With a more heavyweight `Decoder`, `Probe` could only store a reference
 // and the current position which it restores in a `Drop` impl.
-#[derive(Debug)]
+#[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Probe<'a, 'b> {
     decoder: Decoder<'b>,
     _marker: marker::PhantomData<&'a mut ()>
@@ -1072,7 +1076,56 @@ fn u64_to_usize(n: u64, pos: usize) -> Result<usize, Error> {
 
 fn try_as<A, B>(val: A, msg: &'static str, pos: usize) -> Result<B, Error>
 where
-    A: TryInto<B> + Into<u64> + Copy
+    A: TryAs<B> + Copy,
 {
-    val.try_into().map_err(|_| Error::overflow(val.into()).at(pos).with_message(msg))
+    val.try_as().map_err(|n| Error::overflow(n).at(pos).with_message(msg))
+}
+
+trait TryAs<B> {
+    fn try_as(self) -> Result<B, u64>;
+}
+
+macro_rules! impl_try_as {
+    ($from:ty => $($to:ty),*) => {
+        $(
+            impl TryAs<$to> for $from {
+                fn try_as(self) -> Result<$to, u64> {
+                    if self as u64 > <$to>::MAX as u64 {
+                        Err(self as u64)
+                    } else {
+                        Ok(self as $to)
+                    }
+                }
+            }
+        )*
+    }
+}
+
+impl_try_as!(u8  => u8, i8);
+impl_try_as!(u16 => u8, u16, i8, i16);
+impl_try_as!(u32 => u8, u16, u32, i8, i16, i32);
+impl_try_as!(u64 => u8, u16, u32, u64, i8, i16, i32, i64);
+
+#[allow(unnecessary_transmutes)]
+fn f32_from_be_bytes(bytes: [u8; 4]) -> f32 {
+    let bits = u32::from_be_bytes(bytes);
+    // SAFETY: reinterpret u32 bits as f32 — same size, no UB.
+    unsafe { core::mem::transmute(bits) }
+}
+
+#[allow(unnecessary_transmutes)]
+fn f64_from_be_bytes(bytes: [u8; 8]) -> f64 {
+    let bits = u64::from_be_bytes(bytes);
+    // SAFETY: reinterpret u64 bits as f64 — same size, no UB.
+    unsafe { core::mem::transmute(bits) }
+}
+
+#[allow(unnecessary_transmutes)]
+fn char_from_u32(n: u32) -> Option<char> {
+    if n > 0x10FFFF || (n >= 0xD800 && n <= 0xDFFF) {
+        None
+    } else {
+        // SAFETY: we just validated the value is a valid Unicode scalar value.
+        Some(unsafe { core::mem::transmute(n) })
+    }
 }

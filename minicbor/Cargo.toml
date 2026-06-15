@@ -17,6 +17,7 @@ full   = ["std", "derive", "half"]
 alloc  = []
 std    = ["alloc"]
 derive = ["minicbor-derive"]
+certified_subset = []
 
 [dependencies]
 minicbor-derive = { version = "0.19.4", path = "../minicbor-derive", optional = true }
