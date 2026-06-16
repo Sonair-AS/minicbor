@@ -13,7 +13,6 @@ categories    = ["encoding"]
 features = ["std", "derive", "half"]
 
 [features]
-full   = ["std", "derive", "half"]
 alloc  = []
 std    = ["alloc"]
 derive = ["minicbor-derive"]
@@ -21,11 +20,9 @@ certified_subset = []
 
 [dependencies]
 minicbor-derive = { version = "0.19.4", path = "../minicbor-derive", optional = true }
-half            = { version = "2.4.0", default-features = false, optional = true }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage_nightly)'] }
 
 [dev-dependencies]
-minicbor = { path = ".", features = ["std", "half"] }
-
-[[bin]]
-name = "cbor-display"
-required-features = ["std", "half"]
+minicbor = { path = ".", features = ["std"] }

@@ -204,25 +204,10 @@ impl<'b> Decoder<'b> {
         }
     }
 
-    /// Decode a half float (`f16`) and return it in an `f32`.
-    ///
-    /// Only available when the feature `half` is present.
-    #[cfg(feature = "half")]
-    pub fn f16(&mut self) -> Result<f32, Error> {
-        let p = self.pos;
-        let b = self.read()?;
-        if 0xf9 != b {
-            return Err(Error::type_mismatch(self.type_of(b)?).at(p).with_message("expected f16"))
-        }
-        Ok(half::f16::from_bits(u16::from_be_bytes(self.read_array()?)).to_f32())
-    }
-
     /// Decode an `f32` value.
     pub fn f32(&mut self) -> Result<f32, Error> {
         let p = self.pos;
         match self.current()? {
-            #[cfg(feature = "half")]
-            0xf9 => self.f16(),
             0xfa => {
                 self.read()?;
                 let bytes: [u8; 4] = self.read_array()?;
@@ -236,8 +221,6 @@ impl<'b> Decoder<'b> {
     pub fn f64(&mut self) -> Result<f64, Error> {
         let p = self.pos;
         match self.current()? {
-            #[cfg(feature = "half")]
-            0xf9 => self.f16().map(|n| n as f64),
             0xfa => self.f32().map(|n| n as f64),
             0xfb => {
                 self.read()?;
@@ -475,14 +458,9 @@ impl<'b> Decoder<'b> {
         self.type_of(self.current()?)
     }
 
-    /// Iterate over a series of CBOR tokens.
-    #[cfg(feature = "half")]
-    pub fn tokens<'a>(&'a mut self) -> crate::decode::Tokenizer<'a, 'b> {
-        crate::decode::Tokenizer::from(self)
-    }
-
     /// Skip over the current CBOR value.
     #[cfg(feature = "alloc")]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn skip(&mut self) -> Result<(), Error> {
         // Unless we encounter indefinite-length arrays or maps inside of regular
         // maps or arrays we only need to count how many more CBOR items we need

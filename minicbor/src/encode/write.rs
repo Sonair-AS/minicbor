@@ -32,6 +32,7 @@ impl Write for &mut [u8] {
 }
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl Write for alloc::vec::Vec<u8> {
     type Error = core::convert::Infallible;
 
@@ -106,6 +107,7 @@ impl<const N: usize> Write for Cursor<[u8; N]> {
 }
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl Write for Cursor<alloc::boxed::Box<[u8]>> {
     type Error = EndOfSlice;
 
@@ -125,6 +127,7 @@ impl Write for Cursor<alloc::boxed::Box<[u8]>> {
 pub struct Writer<W>(W);
 
 #[cfg(feature = "std")]
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<W> Writer<W> {
     pub fn new(w: W) -> Self {
         Writer(w)
@@ -147,6 +150,7 @@ impl<W> Writer<W> {
 }
 
 #[cfg(feature = "std")]
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<W: std::io::Write> Write for Writer<W> {
     type Error = std::io::Error;
 
@@ -160,6 +164,7 @@ impl<W: std::io::Write> Write for Writer<W> {
 pub struct EndOfSlice(());
 
 #[cfg(not(feature = "certified_subset"))]
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl core::fmt::Display for EndOfSlice {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         f.write_str("end of slice")
@@ -167,6 +172,7 @@ impl core::fmt::Display for EndOfSlice {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl core::error::Error for EndOfSlice {}
 
 /// An error indicating the end of an array.
@@ -174,6 +180,7 @@ impl core::error::Error for EndOfSlice {}
 pub struct EndOfArray(());
 
 #[cfg(not(feature = "certified_subset"))]
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl core::fmt::Display for EndOfArray {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         f.write_str("end of array")
@@ -181,4 +188,5 @@ impl core::fmt::Display for EndOfArray {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl core::error::Error for EndOfArray {}
