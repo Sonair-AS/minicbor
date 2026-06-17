@@ -1,4 +1,4 @@
-use quote::{quote, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::spanned::Spanned;
 
 use crate::blacklist::Blacklist;
@@ -60,8 +60,10 @@ fn on_struct(inp: &mut syn::DeriveInput) -> syn::Result<proc_macro2::TokenStream
     let tag = encode_tag(&attrs);
     let (tests, statements) = encode_fields(&fields, true, encoding, false)?;
 
-    Ok(quote! {
+    let span = name.span();
+    Ok(quote_spanned! {span=>
         impl #impl_generics minicbor::Encode<Ctx> for #name #typ_generics #where_clause {
+            #[allow(clippy::cognitive_complexity)]
             fn encode<__W777>(&self, __e777: &mut minicbor::Encoder<__W777>, __ctx777: &mut Ctx) -> core::result::Result<(), minicbor::encode::Error<__W777::Error>>
             where
                 __W777: minicbor::encode::Write
@@ -231,6 +233,7 @@ fn on_enum(inp: &mut syn::DeriveInput) -> syn::Result<proc_macro2::TokenStream> 
 
     Ok(quote! {
         impl #impl_generics minicbor::Encode<Ctx> for #name #typ_generics #where_clause {
+            #[cfg_attr(coverage_nightly, coverage(off))]
             fn encode<__W777>(&self, __e777: &mut minicbor::Encoder<__W777>, __ctx777: &mut Ctx) -> core::result::Result<(), minicbor::encode::Error<__W777::Error>>
             where
                 __W777: minicbor::encode::Write

@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use quote::quote;
+use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 
 use crate::attrs::codec::PathOrDefault;
@@ -120,8 +120,10 @@ fn on_struct(inp: &mut syn::DeriveInput) -> syn::Result<proc_macro2::TokenStream
 
     let tag = decode_tag(&attrs);
 
-    Ok(quote! {
+    let span = name.span();
+    Ok(quote_spanned! {span=>
         impl #impl_generics minicbor::Decode<'bytes, Ctx> for #name #typ_generics #where_clause {
+            #[allow(clippy::cognitive_complexity)]
             fn decode(__d777: &mut minicbor::Decoder<'bytes>, __ctx777: &mut Ctx) -> core::result::Result<#name #typ_generics, minicbor::decode::Error> {
                 #tag
                 let __p777 = __d777.position();
@@ -275,6 +277,7 @@ fn on_enum(inp: &mut syn::DeriveInput) -> syn::Result<proc_macro2::TokenStream> 
 
     Ok(quote! {
         impl #impl_generics minicbor::Decode<'bytes, Ctx> for #name #typ_generics #where_clause {
+            #[cfg_attr(coverage_nightly, coverage(off))]
             fn decode(__d777: &mut minicbor::Decoder<'bytes>, __ctx777: &mut Ctx) -> core::result::Result<#name #typ_generics, minicbor::decode::Error> {
                 #tag
                 #check
