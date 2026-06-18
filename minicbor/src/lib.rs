@@ -91,8 +91,13 @@
 //! ```
 
 #![forbid(unused_variables)]
+// Explicit lifetime annotations kept for clarity in codec APIs where borrowed data flows are non-trivial.
 #![allow(clippy::needless_lifetimes)]
+// The certified subset feature-gates out alloc/std code paths, leaving some items unused.
 #![cfg_attr(feature = "certified_subset", allow(dead_code, unused_imports))]
+// coverage(off) is applied to items gated behind `alloc`, `std`, or `not(certified_subset)`.
+// These code paths are excluded from the certified on-device build and therefore from coverage
+// measurement. Coverage is tracked only for the certified subset (no_std, no alloc).
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![cfg_attr(not(feature = "std"), no_std)]
 

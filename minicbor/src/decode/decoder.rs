@@ -1,3 +1,4 @@
+// CBOR constants use groupings that align with the CBOR wire-format structure (major type + additional info bits).
 #![allow(clippy::unusual_byte_groupings)]
 
 use crate::{ARRAY, BREAK, BYTES, MAP, SIMPLE, TAGGED, TEXT, SIGNED, UNSIGNED};
@@ -1084,21 +1085,21 @@ impl_try_as!(u16 => u8, u16, i8, i16);
 impl_try_as!(u32 => u8, u16, u32, i8, i16, i32);
 impl_try_as!(u64 => u8, u16, u32, u64, i8, i16, i32, i64);
 
-#[allow(unnecessary_transmutes)]
+#[allow(unnecessary_transmutes)] // transmute used instead of from_bits() for const-compatibility with Ferrocene toolchain
 fn f32_from_be_bytes(bytes: [u8; 4]) -> f32 {
     let bits = u32::from_be_bytes(bytes);
     // SAFETY: reinterpret u32 bits as f32 — same size, no UB.
     unsafe { core::mem::transmute(bits) }
 }
 
-#[allow(unnecessary_transmutes)]
+#[allow(unnecessary_transmutes)] // transmute used instead of from_bits() for const-compatibility with Ferrocene toolchain
 fn f64_from_be_bytes(bytes: [u8; 8]) -> f64 {
     let bits = u64::from_be_bytes(bytes);
     // SAFETY: reinterpret u64 bits as f64 — same size, no UB.
     unsafe { core::mem::transmute(bits) }
 }
 
-#[allow(unnecessary_transmutes)]
+#[allow(unnecessary_transmutes)] // transmute used instead of char::from_u32_unchecked() for const-compatibility with Ferrocene toolchain
 fn char_from_u32(n: u32) -> Option<char> {
     if n > 0x10FFFF || (n >= 0xD800 && n <= 0xDFFF) {
         None

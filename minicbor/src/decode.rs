@@ -496,6 +496,9 @@ impl <T, const N: usize> ArrayVec<T, N> {
 
     fn into_array(self) -> Result<[T; N], Self> {
         if self.len == N {
+            // SAFETY: All N elements have been initialized via `push()`, so the
+            // MaybeUninit<T> buffer can be reinterpreted as [T; N]. We `forget(self)`
+            // afterwards to prevent the Drop impl from double-freeing the elements.
             let array = unsafe {
                 (&self.buffer as *const [MaybeUninit<T>; N] as *const [T; N]).read()
             };
@@ -523,6 +526,9 @@ impl <T, const N: usize> ArrayVec<T, N> {
 
 impl <T, const N: usize> core::ops::Drop for ArrayVec<T, N> {
     fn drop(&mut self) {
+        // SAFETY: The first `self.len` elements have been initialized via `push()`.
+        // Constructing a slice over exactly those elements and dropping them is sound
+        // because `self.len` is always <= N and all slots below `self.len` hold valid `T`.
         unsafe {
             let s = core::slice::from_raw_parts_mut(self.buffer.as_mut_ptr() as *mut T, self.len);
             core::ptr::drop_in_place(s)
