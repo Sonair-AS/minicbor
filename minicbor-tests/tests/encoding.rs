@@ -1,4 +1,5 @@
 #![cfg(feature = "std")]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 use minicbor::{Encode, Decode, CborLen};
 

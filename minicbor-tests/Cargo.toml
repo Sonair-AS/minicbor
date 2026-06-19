@@ -18,6 +18,10 @@ arbitrary = { version = "1.4.1", features = ["derive"] }
 minicbor  = { path = "../minicbor" }
 rand      = "0.9.0"
 
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ["cfg(coverage)", "cfg(coverage_nightly)"]
+
 [dev-dependencies]
 hex        = "0.4.2"
 quickcheck = "1.0.1"
