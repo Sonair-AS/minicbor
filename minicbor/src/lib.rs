@@ -15,23 +15,16 @@
 //! [`Encoder::str`]. In addition there is support for data type inspection.
 //! The `Decoder` can be queried for the current data type which returns a
 //! [`data::Type`] that can represent every possible CBOR type and decoding
-//! can thus proceed based on this information. It is also possible to just
-//! tokenize the input bytes using a [`Tokenizer`](decode::Tokenizer), i.e.
-//! an `Iterator` over CBOR [`Token`](data::Token)s. Finally, the length
-//! in bytes of a value's CBOR representation can be calculated if the
-//! value's type implements the [`CborLen`] trait.
+//! can thus proceed based on this information. The length in bytes of a
+//! value's CBOR representation can be calculated if the value's type
+//! implements the [`CborLen`] trait.
 //!
 //! Optionally, `Encode` and `Decode` can be derived for structs and enums
 //! using the respective derive macros (*requires feature* `"derive"`).
 //! See [`minicbor_derive`] for details.
 //!
-//! For I/O support see [`minicbor-io`][1].
-//!
-//! Support for [serde][2] is available in [`minicbor-serde`][3].
-//!
-//! [1]: https://docs.rs/minicbor_io/
-//! [2]: https://crates.io/crates/serde
-//! [3]: https://crates.io/crates/minicbor-serde
+//! [CBOR]: https://datatracker.ietf.org/doc/html/rfc8949
+//! [serde]: https://serde.rs
 //!
 //! # Feature flags
 //!
@@ -43,6 +36,14 @@
 //!   on the `std` crate.
 //!
 //! - `"derive"`: Allows deriving [`Encode`] and [`Decode`] traits.
+//!
+//! - `"certified_subset"`: Strips all `Debug`, `Display`, and `Error` trait
+//!   implementations from the build. These traits rely on `core::fmt`
+//!   formatting machinery which is not part of the certified on-device code
+//!   path. They are purely diagnostic aids (logging, test output, error
+//!   messages) and are never invoked by the functional encode/decode logic.
+//!   Removing them from the certified build reduces the verified surface area
+//!   to only the codec logic that actually executes on target.
 //!
 //! # Example: generic encoding and decoding
 //!
@@ -96,52 +97,21 @@
 //! assert_eq!("2013-03-21T20:04:00Z", decoder.str()?);
 //! # Ok::<_, Box<dyn core::error::Error>>(())
 //! ```
-//!
-//! # Example: tokenization
-//!
-//! ```
-//! use minicbor::display;
-//! use minicbor::{Encoder, Decoder};
-//! use minicbor::data::Token;
-//!
-//! let input  = [0x83, 0x01, 0x9f, 0x02, 0x03, 0xff, 0x82, 0x04, 0x05];
-//!
-//! assert_eq!("[1, [_ 2, 3], [4, 5]]", format!("{}", display(&input)));
-//!
-//! let tokens = Decoder::new(&input).tokens().collect::<Result<Vec<Token>, _>>()?;
-//!
-//! assert_eq! { &tokens[..],
-//!     &[Token::Array(3),
-//!       Token::U8(1),
-//!       Token::BeginArray,
-//!       Token::U8(2),
-//!       Token::U8(3),
-//!       Token::Break,
-//!       Token::Array(2),
-//!       Token::U8(4),
-//!       Token::U8(5)]
-//! };
-//!
-//! let mut buffer = [0u8; 9];
-//! Encoder::new(buffer.as_mut()).tokens(&tokens)?;
-//!
-//! assert_eq!(input, buffer);
-//!
-//! # Ok::<_, Box<dyn core::error::Error>>(())
-//! ```
-//!
-//! [CBOR]: https://datatracker.ietf.org/doc/html/rfc8949
-//! [serde]: https://serde.rs
 
 #![forbid(unused_variables)]
+// Explicit lifetime annotations kept for clarity in codec APIs where borrowed data flows are non-trivial.
 #![allow(clippy::needless_lifetimes)]
+// The certified subset feature-gates out alloc/std code paths, leaving some items unused.
 #![cfg_attr(feature = "certified_subset", allow(dead_code, unused_imports))]
+// coverage(off) is applied to items gated behind `alloc`, `std`, or `not(certified_subset)`.
+// These code paths are excluded from the certified on-device build and therefore from coverage
+// measurement. Coverage is tracked only for the certified subset (no_std, no alloc).
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-pub mod bytes;
 pub mod data;
 pub mod decode;
 pub mod encode;
@@ -208,6 +178,8 @@ where
 ///
 /// *Requires feature* `"alloc"`.
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub fn to_vec<T>(x: T) -> Result<Vec<u8>, encode::Error<Infallible>>
 where
     T: Encode<()>
@@ -221,6 +193,8 @@ where
 ///
 /// *Requires feature* `"alloc"`.
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub fn to_vec_with<C, T>(x: T, ctx: &mut C) -> Result<Vec<u8>, encode::Error<Infallible>>
 where
     T: Encode<C>
@@ -228,40 +202,6 @@ where
     let mut e = Encoder::new(Vec::new());
     x.encode(&mut e, ctx)?;
     Ok(e.into_writer())
-}
-
-/// Display the given CBOR bytes in [diagnostic notation][1].
-///
-/// *Requires features* `"alloc"` *and* `"half"`.
-///
-/// Quick syntax summary:
-///
-/// - Maps are enclosed in curly braces: `{` and `}`.
-/// - Arrays are enclosed in brackets: `[` and `]`.
-/// - Indefinite maps start with `{_` instead of `{`.
-/// - Indefinite arrays start with `[_` instead of `[`.
-/// - Bytes are hex encoded and enclosed in `h'` and `'`.
-/// - Strings are enclosed in double quotes.
-/// - Numbers and booleans are displayed as in Rust but floats are always
-///   shown in scientific notation (this differs slightly from the RFC
-///   format).
-/// - Indefinite bytes are enclosed in `(_` and `)` except for the empty
-///   sequence which is shown as `''_`.
-/// - Indefinite strings are enclosed in `(_` and `)` except for the empty
-///   sequence which is shown as `""_`.
-/// - Tagged values are enclosed in `t(` and `)` where `t` is the numeric
-///   tag value.
-/// - Simple values are shown as `simple(n)` where `n` is the numeric
-///   simple value.
-/// - Undefined and null are shown as `undefined` and `null`.
-///
-/// No error is produced should decoding fail, the error message
-/// becomes part of the display.
-///
-/// [1]: https://www.rfc-editor.org/rfc/rfc8949.html#section-8
-#[cfg(all(feature = "alloc", feature = "half"))]
-pub fn display<'b>(cbor: &'b [u8]) -> impl core::fmt::Display + 'b {
-    decode::Tokenizer::new(cbor)
 }
 
 /// Calculate the length in bytes of the given value's CBOR representation.

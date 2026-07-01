@@ -399,43 +399,7 @@
 //! their lifetimes are constrained by the input lifetime:
 //!
 //! - `&'_ str`
-//! - `&'_ minicbor::bytes::ByteSlice`
 //! - `Option<&'_ str>`
-//! - `Option<&'_ minicbor::bytes::ByteSlice>`
-//!
-//! ## What about `&[u8]`?
-//!
-//! `&[u8]` is a special case of `&[T]`. The lack of trait impl specialisation
-//! in Rust makes it difficult to provide optimised support for byte slices.
-//! The generic `[T]` impl of `Encode` produces an array of `T`s. To specifically
-//! encode to and decode from CBOR bytes, the types `ByteSlice`, `ByteArray` and
-//! `ByteVec` are provided by `minicbor`. In addition, the attributes
-//! `encode_with`, `decode_with` and `with` can be used with `&[u8]` when deriving,
-//! e.g.
-//!
-//! ```
-//! use minicbor::{Encode, Decode};
-//!
-//! #[derive(Encode, Decode)]
-//! struct Foo<'a> {
-//!     #[cbor(n(0), with = "minicbor::bytes")]
-//!     field0: &'a [u8],
-//!
-//!     #[n(1)]
-//!     #[cbor(encode_with = "minicbor::bytes::encode")]
-//!     #[cbor(decode_with = "minicbor::bytes::decode")]
-//!     field1: &'a [u8],
-//!
-//!     #[cbor(n(2), with = "minicbor::bytes")]
-//!     field2: Option<&'a [u8]>,
-//!
-//!     #[cbor(n(3), with = "minicbor::bytes")]
-//!     field3: Vec<u8>,
-//!
-//!     #[cbor(n(4), with = "minicbor::bytes")]
-//!     field4: [u8; 16]
-//! }
-//! ```
 //!
 //! # CBOR encoding
 //!

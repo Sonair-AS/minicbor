@@ -4,6 +4,7 @@ use crate::encode::{Encode, Error, Write};
 
 /// A non-allocating CBOR encoder writing encoded bytes to the given [`Write`] sink.
 #[derive(Clone)]
+// Diagnostic only — excluded from certified build (see `certified_subset` feature docs).
 #[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Encoder<W> { writer: W }
 
@@ -164,39 +165,18 @@ impl<W: Write> Encoder<W> {
         }
     }
 
-    /// Encode an `f32` value as a half float (`f16)`.
-    ///
-    /// *Requires feature* `"half"`.
-    ///
-    /// **NB**: The conversion from `f32` to `f16` is potentially lossy.
-    /// Generally values are truncated and rounded to the nearest 16-bit
-    /// value, except:
-    ///
-    ///   - 32-bit values which do not fit into 16 bit become ±∞.
-    ///   - 32-bit subnormal values become ±0.
-    ///   - Exponents smaller than the min. 16-bit exponent become
-    ///     16-bit subnormals or ±0.
-    ///
-    /// For further details please consult the [half][1] crate which is
-    /// used internally for `f16` support.
-    ///
-    /// [1]: https://crates.io/crates/half
-    #[cfg(feature = "half")]
-    pub fn f16(&mut self, x: f32) -> Result<&mut Self, Error<W::Error>> {
-        let n = half::f16::from_f32(x).to_bits();
-        self.put(&[SIMPLE | 25])?.put(&n.to_be_bytes()[..])
-    }
-
     /// Encode an `f32` value.
-    #[allow(unnecessary_transmutes)]
+    #[allow(unnecessary_transmutes)] // transmute used instead of to_bits() — not available in Ferrocene's certified libcore
     pub fn f32(&mut self, x: f32) -> Result<&mut Self, Error<W::Error>> {
+        // SAFETY: reinterpret f32 as u32 — same size, no UB.
         let bits: u32 = unsafe { core::mem::transmute(x) };
         self.put(&[SIMPLE | 26])?.put(&bits.to_be_bytes()[..])
     }
 
     /// Encode an `f64` value.
-    #[allow(unnecessary_transmutes)]
+    #[allow(unnecessary_transmutes)] // transmute used instead of to_bits() for const-compatibility with Ferrocene toolchain
     pub fn f64(&mut self, x: f64) -> Result<&mut Self, Error<W::Error>> {
+        // SAFETY: reinterpret f64 as u64 — same size, no UB.
         let bits: u64 = unsafe { core::mem::transmute(x) };
         self.put(&[SIMPLE | 27])?.put(&bits.to_be_bytes()[..])
     }
@@ -287,18 +267,6 @@ impl<W: Write> Encoder<W> {
 
     /// Syntactic sugar for `Ok(())`.
     pub fn ok(&mut self) -> Result<(), Error<W::Error>> {
-        Ok(())
-    }
-
-    /// Encode a sequence of CBOR tokens.
-    #[cfg(feature = "half")]
-    pub fn tokens<'a, 'b: 'a, I>(&mut self, tokens: I) -> Result<(), Error<W::Error>>
-    where
-        I: IntoIterator<Item = &'a crate::data::Token<'b>>
-    {
-        for t in tokens {
-            self.encode(t)?;
-        }
         Ok(())
     }
 

@@ -11,16 +11,17 @@ description = "minicbor test suite"
 alloc  = ["minicbor/alloc"]
 std    = ["alloc", "minicbor/std", "minicbor/derive"]
 derive = ["alloc", "minicbor/derive"]
+certified_subset = ["minicbor/certified_subset"]
 
 [dependencies]
 arbitrary = { version = "1.4.1", features = ["derive"] }
-minicbor  = { path = "../minicbor", features = ["half"] }
+minicbor  = { path = "../minicbor" }
 rand      = "0.9.0"
 
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ["cfg(coverage)", "cfg(coverage_nightly)"]
+
 [dev-dependencies]
-half       = "2.4.1"
 hex        = "0.4.2"
 quickcheck = "1.0.1"
-minicbor-serde = { path = "../minicbor-serde", features = ["alloc"] }
-serde      = { version = "1.0", features = ["derive"] }
-serde_cbor = "0.11"

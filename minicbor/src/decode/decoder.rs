@@ -1,3 +1,4 @@
+// CBOR constants use groupings that align with the CBOR wire-format structure (major type + additional info bits).
 #![allow(clippy::unusual_byte_groupings)]
 
 use crate::{ARRAY, BREAK, BYTES, MAP, SIMPLE, TAGGED, TEXT, SIGNED, UNSIGNED};
@@ -83,8 +84,8 @@ impl<'b> Decoder<'b> {
     pub fn u16(&mut self) -> Result<u16, Error> {
         let p = self.pos;
         match self.read()? {
-            n @ 0 ..= 0x17 => Ok(n as u16),
-            0x18           => self.read().map(|n| n as u16),
+            n @ 0 ..= 0x17 => Ok(u16::from(n)),
+            0x18           => self.read().map(u16::from),
             0x19           => self.read_array().map(u16::from_be_bytes),
             0x1a           => self.read_array().map(u32::from_be_bytes).and_then(|n| try_as(n, "when converting u32 to u16", p)),
             0x1b           => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to u16", p)),
@@ -96,9 +97,9 @@ impl<'b> Decoder<'b> {
     pub fn u32(&mut self) -> Result<u32, Error> {
         let p = self.pos;
         match self.read()? {
-            n @ 0 ..= 0x17 => Ok(n as u32),
-            0x18           => self.read().map(|n| n as u32),
-            0x19           => self.read_array().map(u16::from_be_bytes).map(|n| n as u32),
+            n @ 0 ..= 0x17 => Ok(u32::from(n)),
+            0x18           => self.read().map(u32::from),
+            0x19           => self.read_array().map(u16::from_be_bytes).map(u32::from),
             0x1a           => self.read_array().map(u32::from_be_bytes),
             0x1b           => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to u32", p)),
             b              => Err(Error::type_mismatch(self.type_of(b)?).at(p).with_message("expected u32"))
@@ -204,25 +205,10 @@ impl<'b> Decoder<'b> {
         }
     }
 
-    /// Decode a half float (`f16`) and return it in an `f32`.
-    ///
-    /// Only available when the feature `half` is present.
-    #[cfg(feature = "half")]
-    pub fn f16(&mut self) -> Result<f32, Error> {
-        let p = self.pos;
-        let b = self.read()?;
-        if 0xf9 != b {
-            return Err(Error::type_mismatch(self.type_of(b)?).at(p).with_message("expected f16"))
-        }
-        Ok(half::f16::from_bits(u16::from_be_bytes(self.read_array()?)).to_f32())
-    }
-
     /// Decode an `f32` value.
     pub fn f32(&mut self) -> Result<f32, Error> {
         let p = self.pos;
         match self.current()? {
-            #[cfg(feature = "half")]
-            0xf9 => self.f16(),
             0xfa => {
                 self.read()?;
                 let bytes: [u8; 4] = self.read_array()?;
@@ -236,8 +222,6 @@ impl<'b> Decoder<'b> {
     pub fn f64(&mut self) -> Result<f64, Error> {
         let p = self.pos;
         match self.current()? {
-            #[cfg(feature = "half")]
-            0xf9 => self.f16().map(|n| n as f64),
             0xfa => self.f32().map(|n| n as f64),
             0xfb => {
                 self.read()?;
@@ -475,14 +459,10 @@ impl<'b> Decoder<'b> {
         self.type_of(self.current()?)
     }
 
-    /// Iterate over a series of CBOR tokens.
-    #[cfg(feature = "half")]
-    pub fn tokens<'a>(&'a mut self) -> crate::decode::Tokenizer<'a, 'b> {
-        crate::decode::Tokenizer::from(self)
-    }
-
     /// Skip over the current CBOR value.
     #[cfg(feature = "alloc")]
+    // Excluded from coverage — see lib.rs for rationale.
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn skip(&mut self) -> Result<(), Error> {
         // Unless we encounter indefinite-length arrays or maps inside of regular
         // maps or arrays we only need to count how many more CBOR items we need
@@ -654,10 +634,10 @@ impl<'b> Decoder<'b> {
     /// Decode a `u64` value beginning with `b`.
     pub(crate) fn unsigned(&mut self, b: u8, p: usize) -> Result<u64, Error> {
         match b {
-            n @ 0 ..= 0x17 => Ok(n as u64),
-            0x18 => self.read().map(|n| n as u64),
-            0x19 => self.read_array().map(u16::from_be_bytes).map(|n| n as u64),
-            0x1a => self.read_array().map(u32::from_be_bytes).map(|n| n as u64),
+            n @ 0 ..= 0x17 => Ok(u64::from(n)),
+            0x18 => self.read().map(u64::from),
+            0x19 => self.read_array().map(u16::from_be_bytes).map(u64::from),
+            0x1a => self.read_array().map(u32::from_be_bytes).map(u64::from),
             0x1b => self.read_array().map(u64::from_be_bytes),
             _    => Err(Error::type_mismatch(self.type_of(b)?)
                 .with_message("expected u64")
@@ -1106,21 +1086,21 @@ impl_try_as!(u16 => u8, u16, i8, i16);
 impl_try_as!(u32 => u8, u16, u32, i8, i16, i32);
 impl_try_as!(u64 => u8, u16, u32, u64, i8, i16, i32, i64);
 
-#[allow(unnecessary_transmutes)]
+#[allow(unnecessary_transmutes)] // transmute used instead of from_bits() for const-compatibility with Ferrocene toolchain
 fn f32_from_be_bytes(bytes: [u8; 4]) -> f32 {
     let bits = u32::from_be_bytes(bytes);
     // SAFETY: reinterpret u32 bits as f32 — same size, no UB.
     unsafe { core::mem::transmute(bits) }
 }
 
-#[allow(unnecessary_transmutes)]
+#[allow(unnecessary_transmutes)] // transmute used instead of from_bits() for const-compatibility with Ferrocene toolchain
 fn f64_from_be_bytes(bytes: [u8; 8]) -> f64 {
     let bits = u64::from_be_bytes(bytes);
     // SAFETY: reinterpret u64 bits as f64 — same size, no UB.
     unsafe { core::mem::transmute(bits) }
 }
 
-#[allow(unnecessary_transmutes)]
+#[allow(unnecessary_transmutes)] // transmute used instead of char::from_u32() — not available in Ferrocene's certified libcore
 fn char_from_u32(n: u32) -> Option<char> {
     if n > 0x10FFFF || (n >= 0xD800 && n <= 0xDFFF) {
         None

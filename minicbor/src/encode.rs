@@ -87,6 +87,8 @@ impl<C, T: CborLen<C> + ?Sized> CborLen<C> for &mut T {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T: Encode<C> + ?Sized> Encode<C> for alloc::boxed::Box<T> {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
         (**self).encode(e, ctx)
@@ -98,6 +100,8 @@ impl<C, T: Encode<C> + ?Sized> Encode<C> for alloc::boxed::Box<T> {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T: CborLen<C> + ?Sized> CborLen<C> for alloc::boxed::Box<T> {
     fn cbor_len(&self, ctx: &mut C) -> usize {
         (**self).cbor_len(ctx)
@@ -162,6 +166,8 @@ impl<C, T: CborLen<C>, E: CborLen<C>> CborLen<C> for Result<T, E> {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> Encode<C> for alloc::string::String {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, _: &mut C) -> Result<(), Error<W::Error>> {
         e.str(self)?.ok()
@@ -169,6 +175,8 @@ impl<C> Encode<C> for alloc::string::String {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> CborLen<C> for alloc::string::String {
     fn cbor_len(&self, ctx: &mut C) -> usize {
         let n = self.len();
@@ -190,6 +198,8 @@ impl<C> CborLen<C> for core::ffi::CStr {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> Encode<C> for alloc::ffi::CString {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
         self.as_c_str().encode(e, ctx)
@@ -197,6 +207,8 @@ impl<C> Encode<C> for alloc::ffi::CString {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> CborLen<C> for alloc::ffi::CString {
     fn cbor_len(&self, ctx: &mut C) -> usize {
         self.as_c_str().cbor_len(ctx)
@@ -204,6 +216,8 @@ impl<C> CborLen<C> for alloc::ffi::CString {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T> Encode<C> for alloc::borrow::Cow<'_, T>
 where
     T: Encode<C> + alloc::borrow::ToOwned + ?Sized
@@ -218,6 +232,8 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T> CborLen<C> for alloc::borrow::Cow<'_, T>
 where
     T: CborLen<C> + alloc::borrow::ToOwned + ?Sized
@@ -228,6 +244,8 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T, S> Encode<C> for std::collections::HashSet<T, S>
 where
     T: Encode<C>,
@@ -243,6 +261,8 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T, S> CborLen<C> for std::collections::HashSet<T, S>
 where
     T: CborLen<C>,
@@ -254,6 +274,8 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, K, V, S> Encode<C> for std::collections::HashMap<K, V, S>
 where
     K: Encode<C> + Eq + std::hash::Hash,
@@ -271,6 +293,8 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, K, V, S> CborLen<C> for std::collections::HashMap<K, V, S>
 where
     K: CborLen<C>,
@@ -285,6 +309,8 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, K, V> Encode<C> for alloc::collections::BTreeMap<K, V>
 where
     K: Encode<C> + Eq + Ord,
@@ -301,6 +327,8 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, K, V> CborLen<C> for alloc::collections::BTreeMap<K, V>
 where
     K: CborLen<C>,
@@ -338,6 +366,8 @@ impl<C> CborLen<C> for () {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T: Encode<C>> Encode<C> for core::num::Wrapping<T> {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
         self.0.encode(e, ctx)
@@ -345,6 +375,8 @@ impl<C, T: Encode<C>> Encode<C> for core::num::Wrapping<T> {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T: CborLen<C>> CborLen<C> for core::num::Wrapping<T> {
     fn cbor_len(&self, ctx: &mut C) -> usize {
         self.0.cbor_len(ctx)
@@ -817,6 +849,8 @@ impl<C> CborLen<C> for core::time::Duration {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> Encode<C> for std::time::SystemTime {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
         match self.duration_since(std::time::UNIX_EPOCH) {
@@ -827,6 +861,8 @@ impl<C> Encode<C> for std::time::SystemTime {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> CborLen<C> for std::time::SystemTime{
     fn cbor_len(&self, ctx: &mut C) -> usize {
         self.duration_since(std::time::UNIX_EPOCH)
@@ -868,6 +904,8 @@ impl<C, T: CborLen<C>> CborLen<C> for core::cell::RefCell<T> {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> Encode<C> for std::path::Path {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, _: &mut C) -> Result<(), Error<W::Error>> {
         if let Some(s) = self.to_str() {
@@ -879,6 +917,8 @@ impl<C> Encode<C> for std::path::Path {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> CborLen<C> for std::path::Path {
     fn cbor_len(&self, ctx: &mut C) -> usize {
         self.to_str().map(|s| s.cbor_len(ctx)).unwrap_or(0)
@@ -886,6 +926,8 @@ impl<C> CborLen<C> for std::path::Path {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> Encode<C> for std::path::PathBuf {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
         self.as_path().encode(e, ctx)
@@ -893,113 +935,11 @@ impl<C> Encode<C> for std::path::PathBuf {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> CborLen<C> for std::path::PathBuf {
     fn cbor_len(&self, ctx: &mut C) -> usize {
         self.as_path().cbor_len(ctx)
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> Encode<C> for std::net::IpAddr {
-    fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
-        e.array(2)?;
-        match self {
-            std::net::IpAddr::V4(a) => e.u32(0)?.encode_with(a, ctx)?.ok(),
-            std::net::IpAddr::V6(a) => e.u32(1)?.encode_with(a, ctx)?.ok()
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> CborLen<C> for std::net::IpAddr {
-    fn cbor_len(&self, ctx: &mut C) -> usize {
-        1 + match self {
-            std::net::IpAddr::V4(a) => 1 + a.cbor_len(ctx),
-            std::net::IpAddr::V6(a) => 1 + a.cbor_len(ctx),
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> Encode<C> for std::net::Ipv4Addr {
-    fn encode<W: Write>(&self, e: &mut Encoder<W>, _: &mut C) -> Result<(), Error<W::Error>> {
-        e.bytes(&self.octets())?.ok()
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> CborLen<C> for std::net::Ipv4Addr {
-    fn cbor_len(&self, _: &mut C) -> usize {
-        5
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> Encode<C> for std::net::Ipv6Addr {
-    fn encode<W: Write>(&self, e: &mut Encoder<W>, _: &mut C) -> Result<(), Error<W::Error>> {
-        e.bytes(&self.octets())?.ok()
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> CborLen<C> for std::net::Ipv6Addr {
-    fn cbor_len(&self, _: &mut C) -> usize {
-        17
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> Encode<C> for std::net::SocketAddr {
-    fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
-        e.array(2)?;
-        match self {
-            std::net::SocketAddr::V4(a) => e.u32(0)?.encode_with(a, ctx)?.ok(),
-            std::net::SocketAddr::V6(a) => e.u32(1)?.encode_with(a, ctx)?.ok()
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> CborLen<C> for std::net::SocketAddr {
-    fn cbor_len(&self, ctx: &mut C) -> usize {
-        1 + match self {
-            std::net::SocketAddr::V4(a) => 1 + a.cbor_len(ctx),
-            std::net::SocketAddr::V6(a) => 1 + a.cbor_len(ctx),
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> Encode<C> for std::net::SocketAddrV4 {
-    fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
-        e.array(2)?
-            .encode_with(self.ip(), ctx)?
-            .encode_with(self.port(), ctx)?
-            .ok()
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> CborLen<C> for std::net::SocketAddrV4 {
-    fn cbor_len(&self, ctx: &mut C) -> usize {
-        1 + self.ip().cbor_len(ctx) + self.port().cbor_len(ctx)
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> Encode<C> for std::net::SocketAddrV6 {
-    fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
-        e.array(2)?
-            .encode_with(self.ip(), ctx)?
-            .encode_with(self.port(), ctx)?
-            .ok()
-    }
-}
-
-#[cfg(feature = "std")]
-impl<C> CborLen<C> for std::net::SocketAddrV6 {
-    fn cbor_len(&self, ctx: &mut C) -> usize {
-        1 + self.ip().cbor_len(ctx) + self.port().cbor_len(ctx)
     }
 }
 

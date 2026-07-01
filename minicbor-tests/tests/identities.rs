@@ -1,7 +1,7 @@
 #![cfg(feature = "std")]
 
 use minicbor::{Encode, Encoder, CborLen, Decode, Decoder};
-use minicbor::data::{Int, Type, IanaTag};
+use minicbor::data::{Int, IanaTag};
 use minicbor::encode;
 use quickcheck::quickcheck;
 use quickcheck::{Arbitrary, Gen};
@@ -94,19 +94,6 @@ fn nonzero_usize() {
 }
 
 #[test]
-fn f16() {
-    fn property(arg: f32) -> bool {
-        let mut e = Encoder::new(Vec::new());
-        e.f16(arg).unwrap();
-        let mut d = Decoder::new(e.writer());
-        let val = d.f16().unwrap();
-        assert_eq!(d.position(), e.writer().len());
-        half::f16::from_f32(arg).to_f32().to_bits() == val.to_bits()
-    }
-    quickcheck(property as fn(f32) -> bool)
-}
-
-#[test]
 fn f32() {
     fn property(arg: f32) -> bool {
         let vec = minicbor::to_vec(&arg).unwrap();
@@ -192,59 +179,6 @@ fn bytes() {
 }
 
 #[test]
-fn byte_slice() {
-    use minicbor::bytes::ByteSlice;
-
-    fn property(arg: Vec<u8>) -> bool {
-        let arg: &ByteSlice = arg.as_slice().into();
-        let vec = minicbor::to_vec(arg).unwrap();
-        assert_eq!(minicbor::len(arg), vec.len());
-        let mut dec = Decoder::new(&vec);
-        assert_eq!(Some(Type::Bytes), dec.datatype().ok());
-        dec.set_position(0);
-        let val: &ByteSlice = dec.decode().unwrap();
-        assert_eq!(dec.position(), vec.len());
-        arg == val
-    }
-
-    quickcheck(property as fn(Vec<u8>) -> bool)
-}
-
-#[test]
-fn byte_array() {
-    use minicbor::bytes::ByteArray;
-
-    let arg = ByteArray::from([1,2,3,4,5,6,7,8]);
-    let vec = minicbor::to_vec(&arg).unwrap();
-    assert_eq!(minicbor::len(&arg), vec.len());
-    let mut dec = Decoder::new(&vec);
-    assert_eq!(Some(Type::Bytes), dec.datatype().ok());
-    dec.set_position(0);
-    let val: ByteArray<8> = dec.decode().unwrap();
-    assert_eq!(arg, val);
-    assert_eq!(dec.position(), vec.len())
-}
-
-#[test]
-fn byte_vec() {
-    use minicbor::bytes::ByteVec;
-
-    fn property(arg: Vec<u8>) -> bool {
-        let arg = ByteVec::from(arg);
-        let vec = minicbor::to_vec(&arg).unwrap();
-        assert_eq!(minicbor::len(&arg), vec.len());
-        let mut dec = Decoder::new(&vec);
-        assert_eq!(Some(Type::Bytes), dec.datatype().ok());
-        dec.set_position(0);
-        let val: ByteVec = dec.decode().unwrap();
-        assert_eq!(dec.position(), vec.len());
-        arg == val
-    }
-
-    quickcheck(property as fn(Vec<u8>) -> bool)
-}
-
-#[test]
 fn vecdeque() {
     quickcheck(identity as fn(std::collections::VecDeque<u32>) -> bool)
 }
@@ -290,41 +224,6 @@ fn boxed() {
 #[test]
 fn duration() {
     quickcheck(identity as fn(std::time::Duration) -> bool)
-}
-
-#[test]
-fn ip() {
-    quickcheck(identity as fn(std::net::IpAddr) -> bool)
-}
-
-#[test]
-fn ipv4() {
-    quickcheck(identity as fn(std::net::Ipv4Addr) -> bool)
-}
-
-#[test]
-fn ipv6() {
-    quickcheck(identity as fn(std::net::Ipv6Addr) -> bool)
-}
-
-#[test]
-fn socketaddr() {
-    quickcheck(identity as fn(std::net::SocketAddr) -> bool)
-}
-
-#[test]
-fn socketaddrv4() {
-    quickcheck(identity as fn(std::net::SocketAddrV4) -> bool)
-}
-
-#[test]
-fn socketaddrv6() {
-    fn property(mut x: std::net::SocketAddrV6) -> bool {
-        x.set_flowinfo(0);
-        x.set_scope_id(0);
-        identity(x)
-    }
-    quickcheck(property as fn(std::net::SocketAddrV6) -> bool)
 }
 
 #[test]

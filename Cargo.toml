@@ -2,19 +2,13 @@
 members  = [
     "minicbor",
     "minicbor-derive",
+    "minicbor-tests",
+]
+exclude  = [
+    "minicbor-tests-nostd",
     "minicbor-io",
     "minicbor-serde",
-    "minicbor-tests",
     "minicbor-tests-client",
-    "minicbor-bench"
+    "minicbor-bench",
 ]
-exclude  = ["minicbor-tests-nostd"]
 resolver = "2"
-
-[profile.bench]
-lto = true
-codegen-units = 1
-
-[profile.release]
-lto = true
-codegen-units = 1

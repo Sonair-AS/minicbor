@@ -34,6 +34,8 @@ impl<E> Error<E> {
     /// formatted strings. Otherwise only a `&'static str` can be used as a
     /// message.
     #[cfg(feature = "alloc")]
+    // Excluded from coverage — see lib.rs for rationale.
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn message<T: fmt::Display>(msg: T) -> Self {
         Error { err: ErrorImpl::Message, msg: msg.to_string() }
     }
@@ -47,6 +49,8 @@ impl<E> Error<E> {
     ///
     /// *Requires feature* `"alloc"`.
     #[cfg(feature = "alloc")]
+    // Excluded from coverage — see lib.rs for rationale.
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn custom<T: core::error::Error + Send + Sync + 'static>(err: T) -> Self {
         Error { err: ErrorImpl::Custom(Box::new(err)), msg: Default::default() }
     }
@@ -68,6 +72,8 @@ impl<E> Error<E> {
     /// formatted strings. Otherwise only a `&'static str` can be used as a
     /// message.
     #[cfg(feature = "alloc")]
+    // Excluded from coverage — see lib.rs for rationale.
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn with_message<T: fmt::Display>(mut self, msg: T) -> Self {
         self.msg = msg.to_string();
         self
@@ -82,6 +88,8 @@ impl<E> Error<E> {
     }
 
     #[cfg(feature = "alloc")]
+    // Excluded from coverage — see lib.rs for rationale.
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn is_custom(&self) -> bool {
         matches!(self.err, ErrorImpl::Custom(_))
     }
@@ -118,6 +126,8 @@ enum ErrorImpl<E> {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<E: fmt::Display> fmt::Display for Error<E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self.err {
@@ -148,6 +158,8 @@ impl<E: fmt::Display> fmt::Display for Error<E> {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<E: core::error::Error + 'static> core::error::Error for Error<E> {
     fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
         match &self.err {

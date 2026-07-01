@@ -1,6 +1,4 @@
 //! Traits and types for decoding CBOR.
-//!
-//! This module defines the trait [`Decode`] and the actual [`Decoder`].
 
 use core::mem::MaybeUninit;
 
@@ -13,16 +11,6 @@ use crate::data::{Int, Tag, Tagged};
 pub use decoder::{Decoder, Probe};
 pub use decoder::{ArrayIter, ArrayIterWithCtx, BytesIter, MapIter, MapIterWithCtx, StrIter};
 pub use error::Error;
-
-#[cfg(feature = "half")]
-mod tokenizer;
-
-#[cfg(feature = "half")]
-pub use tokenizer::Tokenizer;
-
-#[cfg(feature = "half")]
-#[deprecated(since = "0.23.0", note = "import `Token` from `minicbor::data` instead")]
-pub type Token<'b> = crate::data::Token<'b>;
 
 /// A type that can be decoded from CBOR.
 pub trait Decode<'b, C>: Sized {
@@ -59,6 +47,8 @@ pub trait Decode<'b, C>: Sized {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T: Decode<'b, C>> Decode<'b, C> for alloc::boxed::Box<T> {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
         T::decode(d, ctx).map(alloc::boxed::Box::new)
@@ -76,6 +66,8 @@ impl<'a, 'b: 'a, C> Decode<'b, C> for &'a str {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T> Decode<'b, C> for alloc::borrow::Cow<'_, T>
 where
     T: alloc::borrow::ToOwned + ?Sized,
@@ -91,6 +83,8 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for alloc::string::String {
     fn decode(d: &mut Decoder<'b>, _: &mut C) -> Result<Self, Error> {
         d.str().map(alloc::string::String::from)
@@ -106,6 +100,8 @@ impl<'a, 'b: 'a, C> Decode<'b, C> for &'a core::ffi::CStr {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for alloc::ffi::CString {
     fn decode(d: &mut Decoder<'b>, _: &mut C) -> Result<Self, Error> {
         let c: &core::ffi::CStr = d.decode()?;
@@ -114,6 +110,8 @@ impl<'b, C> Decode<'b, C> for alloc::ffi::CString {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for alloc::boxed::Box<str> {
     fn decode(d: &mut Decoder<'b>, _: &mut C) -> Result<Self, Error> {
         d.str().map(Into::into)
@@ -154,6 +152,8 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T> Decode<'b, C> for alloc::collections::BinaryHeap<T>
 where
     T: Decode<'b, C> + Ord
@@ -169,6 +169,8 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T, S> Decode<'b, C> for std::collections::HashSet<T, S>
 where
     T: Decode<'b, C> + Eq + std::hash::Hash,
@@ -185,6 +187,8 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T> Decode<'b, C> for alloc::collections::BTreeSet<T>
 where
     T: Decode<'b, C> + Ord
@@ -200,6 +204,8 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, K, V, S> Decode<'b, C> for std::collections::HashMap<K, V, S>
 where
     K: Decode<'b, C> + Eq + std::hash::Hash,
@@ -218,6 +224,8 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, K, V> Decode<'b, C> for alloc::collections::BTreeMap<K, V>
 where
     K: Decode<'b, C> + Eq + Ord,
@@ -255,6 +263,8 @@ impl<'b, C> Decode<'b, C> for () {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T: Decode<'b, C>> Decode<'b, C> for core::num::Wrapping<T> {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
         d.decode_with(ctx).map(core::num::Wrapping)
@@ -459,6 +469,8 @@ decode_atomic! {
 macro_rules! decode_sequential {
     ($($t:ty, $push:ident)*) => {
         $(
+            // Excluded from coverage — see lib.rs for rationale.
+            #[cfg_attr(coverage_nightly, coverage(off))]
             impl<'b, C, T: Decode<'b, C>> Decode<'b, C> for $t {
                 fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
                     let iter: ArrayIterWithCtx<C, T> = d.array_iter_with(ctx)?;
@@ -497,6 +509,9 @@ impl <T, const N: usize> ArrayVec<T, N> {
 
     fn into_array(self) -> Result<[T; N], Self> {
         if self.len == N {
+            // SAFETY: All N elements have been initialized via `push()`, so the
+            // MaybeUninit<T> buffer can be reinterpreted as [T; N]. We `forget(self)`
+            // afterwards to prevent the Drop impl from double-freeing the elements.
             let array = unsafe {
                 (&self.buffer as *const [MaybeUninit<T>; N] as *const [T; N]).read()
             };
@@ -524,6 +539,9 @@ impl <T, const N: usize> ArrayVec<T, N> {
 
 impl <T, const N: usize> core::ops::Drop for ArrayVec<T, N> {
     fn drop(&mut self) {
+        // SAFETY: The first `self.len` elements have been initialized via `push()`.
+        // Constructing a slice over exactly those elements and dropping them is sound
+        // because `self.len` is always <= N and all slots below `self.len` hold valid `T`.
         unsafe {
             let s = core::slice::from_raw_parts_mut(self.buffer.as_mut_ptr() as *mut T, self.len);
             core::ptr::drop_in_place(s)
@@ -636,6 +654,8 @@ impl<'b, C> Decode<'b, C> for core::time::Duration {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for std::time::SystemTime {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
         let p = d.position();
@@ -666,6 +686,8 @@ impl<'b, C, T: Decode<'b, C>> Decode<'b, C> for core::cell::RefCell<T> {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'a, 'b: 'a, C> Decode<'b, C> for &'a std::path::Path {
     fn decode(d: &mut Decoder<'b>, _: &mut C) -> Result<Self, Error> {
         d.str().map(std::path::Path::new)
@@ -673,6 +695,8 @@ impl<'a, 'b: 'a, C> Decode<'b, C> for &'a std::path::Path {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for Box<std::path::Path> {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
         d.decode_with(ctx).map(std::path::PathBuf::into_boxed_path)
@@ -680,81 +704,14 @@ impl<'b, C> Decode<'b, C> for Box<std::path::Path> {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
+#[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for std::path::PathBuf {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
         d.decode_with(ctx).map(std::path::Path::to_path_buf)
     }
 }
 
-#[cfg(feature = "std")]
-impl<'b, C> Decode<'b, C> for std::net::IpAddr {
-    fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
-        let p = d.position();
-        if Some(2) != d.array()? {
-            return Err(Error::message("expected enum (2-element array)").at(p))
-        }
-        let p = d.position();
-        match d.i64()? {
-            0 => Ok(std::net::Ipv4Addr::decode(d, ctx)?.into()),
-            1 => Ok(std::net::Ipv6Addr::decode(d, ctx)?.into()),
-            n => Err(Error::unknown_variant(n).at(p))
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-impl<'b, C> Decode<'b, C> for std::net::Ipv4Addr {
-    fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
-        let octets: crate::bytes::ByteArray<4> = Decode::decode(d, ctx)?;
-        Ok(<[u8; 4]>::from(octets).into())
-    }
-}
-
-#[cfg(feature = "std")]
-impl<'b, C> Decode<'b, C> for std::net::Ipv6Addr {
-    fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
-        let octets: crate::bytes::ByteArray<16> = Decode::decode(d, ctx)?;
-        Ok(<[u8; 16]>::from(octets).into())
-    }
-}
-
-#[cfg(feature = "std")]
-impl<'b, C> Decode<'b, C> for std::net::SocketAddr {
-    fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
-        let p = d.position();
-        if Some(2) != d.array()? {
-            return Err(Error::message("expected enum (2-element array)").at(p))
-        }
-        let p = d.position();
-        match d.i64()? {
-            0 => Ok(std::net::SocketAddrV4::decode(d, ctx)?.into()),
-            1 => Ok(std::net::SocketAddrV6::decode(d, ctx)?.into()),
-            n => Err(Error::unknown_variant(n).at(p))
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-impl<'b, C> Decode<'b, C> for std::net::SocketAddrV4 {
-    fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
-        decode_fields! { d ctx |
-            0 ip   => std::net::Ipv4Addr ; "SocketAddrV4::ip"
-            1 port => u16                ; "SocketAddrV4::port"
-        }
-        Ok(std::net::SocketAddrV4::new(ip, port))
-    }
-}
-
-#[cfg(feature = "std")]
-impl<'b, C> Decode<'b, C> for std::net::SocketAddrV6 {
-    fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
-        decode_fields! { d ctx |
-            0 ip   => std::net::Ipv6Addr ; "SocketAddrV6::ip"
-            1 port => u16                ; "SocketAddrV6::port"
-        }
-        Ok(std::net::SocketAddrV6::new(ip, port, 0, 0))
-    }
-}
 
 impl<'b, C, T: Decode<'b, C>> Decode<'b,C > for core::ops::Range<T> {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
