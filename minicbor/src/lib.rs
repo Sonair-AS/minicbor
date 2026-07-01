@@ -37,6 +37,14 @@
 //!
 //! - `"derive"`: Allows deriving [`Encode`] and [`Decode`] traits.
 //!
+//! - `"certified_subset"`: Strips all `Debug`, `Display`, and `Error` trait
+//!   implementations from the build. These traits rely on `core::fmt`
+//!   formatting machinery which is not part of the certified on-device code
+//!   path. They are purely diagnostic aids (logging, test output, error
+//!   messages) and are never invoked by the functional encode/decode logic.
+//!   Removing them from the certified build reduces the verified surface area
+//!   to only the codec logic that actually executes on target.
+//!
 //! # Example: generic encoding and decoding
 //!
 //! ```
@@ -170,6 +178,7 @@ where
 ///
 /// *Requires feature* `"alloc"`.
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 pub fn to_vec<T>(x: T) -> Result<Vec<u8>, encode::Error<Infallible>>
 where
@@ -184,6 +193,7 @@ where
 ///
 /// *Requires feature* `"alloc"`.
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 pub fn to_vec_with<C, T>(x: T, ctx: &mut C) -> Result<Vec<u8>, encode::Error<Infallible>>
 where

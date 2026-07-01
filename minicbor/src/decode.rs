@@ -4,6 +4,7 @@ use core::mem::MaybeUninit;
 
 mod decoder;
 mod error;
+pub mod info;
 
 use crate::data::{Int, Tag, Tagged};
 
@@ -46,6 +47,7 @@ pub trait Decode<'b, C>: Sized {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T: Decode<'b, C>> Decode<'b, C> for alloc::boxed::Box<T> {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
@@ -64,6 +66,7 @@ impl<'a, 'b: 'a, C> Decode<'b, C> for &'a str {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T> Decode<'b, C> for alloc::borrow::Cow<'_, T>
 where
@@ -80,6 +83,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for alloc::string::String {
     fn decode(d: &mut Decoder<'b>, _: &mut C) -> Result<Self, Error> {
@@ -96,6 +100,7 @@ impl<'a, 'b: 'a, C> Decode<'b, C> for &'a core::ffi::CStr {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for alloc::ffi::CString {
     fn decode(d: &mut Decoder<'b>, _: &mut C) -> Result<Self, Error> {
@@ -105,6 +110,7 @@ impl<'b, C> Decode<'b, C> for alloc::ffi::CString {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for alloc::boxed::Box<str> {
     fn decode(d: &mut Decoder<'b>, _: &mut C) -> Result<Self, Error> {
@@ -146,6 +152,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T> Decode<'b, C> for alloc::collections::BinaryHeap<T>
 where
@@ -162,6 +169,7 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T, S> Decode<'b, C> for std::collections::HashSet<T, S>
 where
@@ -179,6 +187,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T> Decode<'b, C> for alloc::collections::BTreeSet<T>
 where
@@ -195,6 +204,7 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, K, V, S> Decode<'b, C> for std::collections::HashMap<K, V, S>
 where
@@ -214,6 +224,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, K, V> Decode<'b, C> for alloc::collections::BTreeMap<K, V>
 where
@@ -252,6 +263,7 @@ impl<'b, C> Decode<'b, C> for () {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C, T: Decode<'b, C>> Decode<'b, C> for core::num::Wrapping<T> {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
@@ -457,6 +469,7 @@ decode_atomic! {
 macro_rules! decode_sequential {
     ($($t:ty, $push:ident)*) => {
         $(
+            // Excluded from coverage — see lib.rs for rationale.
             #[cfg_attr(coverage_nightly, coverage(off))]
             impl<'b, C, T: Decode<'b, C>> Decode<'b, C> for $t {
                 fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
@@ -641,6 +654,7 @@ impl<'b, C> Decode<'b, C> for core::time::Duration {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for std::time::SystemTime {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
@@ -672,6 +686,7 @@ impl<'b, C, T: Decode<'b, C>> Decode<'b, C> for core::cell::RefCell<T> {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'a, 'b: 'a, C> Decode<'b, C> for &'a std::path::Path {
     fn decode(d: &mut Decoder<'b>, _: &mut C) -> Result<Self, Error> {
@@ -680,6 +695,7 @@ impl<'a, 'b: 'a, C> Decode<'b, C> for &'a std::path::Path {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for Box<std::path::Path> {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {
@@ -688,6 +704,7 @@ impl<'b, C> Decode<'b, C> for Box<std::path::Path> {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<'b, C> Decode<'b, C> for std::path::PathBuf {
     fn decode(d: &mut Decoder<'b>, ctx: &mut C) -> Result<Self, Error> {

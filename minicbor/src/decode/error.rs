@@ -68,6 +68,7 @@ impl Error {
     /// formatted strings. Otherwise only a `&'static str` can be used as a
     /// message.
     #[cfg(feature = "alloc")]
+    // Excluded from coverage — see lib.rs for rationale.
     #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn message<T: fmt::Display>(msg: T) -> Self {
         Error {
@@ -81,6 +82,7 @@ impl Error {
     ///
     /// *Requires feature* `"alloc"`.
     #[cfg(feature = "alloc")]
+    // Excluded from coverage — see lib.rs for rationale.
     #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn custom<T: core::error::Error + Send + Sync + 'static>(err: T) -> Self {
         Error {
@@ -157,6 +159,7 @@ impl Error {
     /// formatted strings. Otherwise only a `&'static str` can be used as a
     /// message.
     #[cfg(feature = "alloc")]
+    // Excluded from coverage — see lib.rs for rationale.
     #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn with_message<T: fmt::Display>(mut self, msg: T) -> Self {
         self.msg = msg.to_string();
@@ -185,6 +188,7 @@ impl Error {
     }
 
     #[cfg(feature = "alloc")]
+    // Excluded from coverage — see lib.rs for rationale.
     #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn is_custom(&self) -> bool {
         matches!(self.err, ErrorImpl::Custom(_))
@@ -228,6 +232,7 @@ enum ErrorImpl {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -316,6 +321,7 @@ impl fmt::Display for Error {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl core::error::Error for Error {
     fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {

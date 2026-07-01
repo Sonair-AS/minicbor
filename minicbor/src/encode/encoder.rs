@@ -4,6 +4,7 @@ use crate::encode::{Encode, Error, Write};
 
 /// A non-allocating CBOR encoder writing encoded bytes to the given [`Write`] sink.
 #[derive(Clone)]
+// Diagnostic only — excluded from certified build (see `certified_subset` feature docs).
 #[cfg_attr(not(feature = "certified_subset"), derive(Debug))]
 pub struct Encoder<W> { writer: W }
 
@@ -165,7 +166,7 @@ impl<W: Write> Encoder<W> {
     }
 
     /// Encode an `f32` value.
-    #[allow(unnecessary_transmutes)] // transmute used instead of to_bits() for const-compatibility with Ferrocene toolchain
+    #[allow(unnecessary_transmutes)] // transmute used instead of to_bits() — not available in Ferrocene's certified libcore
     pub fn f32(&mut self, x: f32) -> Result<&mut Self, Error<W::Error>> {
         // SAFETY: reinterpret f32 as u32 — same size, no UB.
         let bits: u32 = unsafe { core::mem::transmute(x) };

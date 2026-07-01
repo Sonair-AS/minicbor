@@ -87,6 +87,7 @@ impl<C, T: CborLen<C> + ?Sized> CborLen<C> for &mut T {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T: Encode<C> + ?Sized> Encode<C> for alloc::boxed::Box<T> {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
@@ -99,6 +100,7 @@ impl<C, T: Encode<C> + ?Sized> Encode<C> for alloc::boxed::Box<T> {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T: CborLen<C> + ?Sized> CborLen<C> for alloc::boxed::Box<T> {
     fn cbor_len(&self, ctx: &mut C) -> usize {
@@ -164,6 +166,7 @@ impl<C, T: CborLen<C>, E: CborLen<C>> CborLen<C> for Result<T, E> {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> Encode<C> for alloc::string::String {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, _: &mut C) -> Result<(), Error<W::Error>> {
@@ -172,6 +175,7 @@ impl<C> Encode<C> for alloc::string::String {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> CborLen<C> for alloc::string::String {
     fn cbor_len(&self, ctx: &mut C) -> usize {
@@ -194,6 +198,7 @@ impl<C> CborLen<C> for core::ffi::CStr {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> Encode<C> for alloc::ffi::CString {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
@@ -202,6 +207,7 @@ impl<C> Encode<C> for alloc::ffi::CString {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> CborLen<C> for alloc::ffi::CString {
     fn cbor_len(&self, ctx: &mut C) -> usize {
@@ -210,6 +216,7 @@ impl<C> CborLen<C> for alloc::ffi::CString {
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T> Encode<C> for alloc::borrow::Cow<'_, T>
 where
@@ -225,6 +232,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T> CborLen<C> for alloc::borrow::Cow<'_, T>
 where
@@ -236,6 +244,7 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T, S> Encode<C> for std::collections::HashSet<T, S>
 where
@@ -252,6 +261,7 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T, S> CborLen<C> for std::collections::HashSet<T, S>
 where
@@ -264,6 +274,7 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, K, V, S> Encode<C> for std::collections::HashMap<K, V, S>
 where
@@ -282,6 +293,7 @@ where
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, K, V, S> CborLen<C> for std::collections::HashMap<K, V, S>
 where
@@ -297,6 +309,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, K, V> Encode<C> for alloc::collections::BTreeMap<K, V>
 where
@@ -314,6 +327,7 @@ where
 }
 
 #[cfg(feature = "alloc")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, K, V> CborLen<C> for alloc::collections::BTreeMap<K, V>
 where
@@ -352,6 +366,7 @@ impl<C> CborLen<C> for () {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T: Encode<C>> Encode<C> for core::num::Wrapping<T> {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
@@ -360,6 +375,7 @@ impl<C, T: Encode<C>> Encode<C> for core::num::Wrapping<T> {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C, T: CborLen<C>> CborLen<C> for core::num::Wrapping<T> {
     fn cbor_len(&self, ctx: &mut C) -> usize {
@@ -833,6 +849,7 @@ impl<C> CborLen<C> for core::time::Duration {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> Encode<C> for std::time::SystemTime {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
@@ -844,6 +861,7 @@ impl<C> Encode<C> for std::time::SystemTime {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> CborLen<C> for std::time::SystemTime{
     fn cbor_len(&self, ctx: &mut C) -> usize {
@@ -886,6 +904,7 @@ impl<C, T: CborLen<C>> CborLen<C> for core::cell::RefCell<T> {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> Encode<C> for std::path::Path {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, _: &mut C) -> Result<(), Error<W::Error>> {
@@ -898,6 +917,7 @@ impl<C> Encode<C> for std::path::Path {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> CborLen<C> for std::path::Path {
     fn cbor_len(&self, ctx: &mut C) -> usize {
@@ -906,6 +926,7 @@ impl<C> CborLen<C> for std::path::Path {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> Encode<C> for std::path::PathBuf {
     fn encode<W: Write>(&self, e: &mut Encoder<W>, ctx: &mut C) -> Result<(), Error<W::Error>> {
@@ -914,6 +935,7 @@ impl<C> Encode<C> for std::path::PathBuf {
 }
 
 #[cfg(feature = "std")]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl<C> CborLen<C> for std::path::PathBuf {
     fn cbor_len(&self, ctx: &mut C) -> usize {

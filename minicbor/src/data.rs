@@ -37,6 +37,7 @@ pub enum Type {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -102,6 +103,7 @@ impl From<&Tag> for u64 {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -288,6 +290,7 @@ impl From<&IanaTag> for u64 {
 pub struct UnknownTag(Tag);
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl fmt::Display for UnknownTag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -296,6 +299,7 @@ impl fmt::Display for UnknownTag {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl core::error::Error for UnknownTag {}
 
@@ -403,6 +407,7 @@ impl Int {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl fmt::Display for Int {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> core::fmt::Result {
@@ -414,19 +419,19 @@ impl fmt::Display for Int {
 
 impl From<u8> for Int {
     fn from(i: u8) -> Self {
-        Int::pos(i as u64)
+        Int::from(u64::from(i))
     }
 }
 
 impl From<u16> for Int {
     fn from(i: u16) -> Self {
-        Int::pos(i as u64)
+        Int::from(u64::from(i))
     }
 }
 
 impl From<u32> for Int {
     fn from(i: u32) -> Self {
-        Int::pos(i as u64)
+        Int::from(u64::from(i))
     }
 }
 
@@ -450,19 +455,19 @@ impl TryFrom<u128> for Int {
 
 impl From<i8> for Int {
     fn from(i: i8) -> Self {
-        Int::from(i as i64)
+        Int::from(i64::from(i))
     }
 }
 
 impl From<i16> for Int {
     fn from(i: i16) -> Self {
-        Int::from(i as i64)
+        Int::from(i64::from(i))
     }
 }
 
 impl From<i32> for Int {
     fn from(i: i32) -> Self {
-        Int::from(i as i64)
+        Int::from(i64::from(i))
     }
 }
 
@@ -500,12 +505,7 @@ impl TryFrom<Int> for u8 {
     type Error = TryFromIntError;
 
     fn try_from(i: Int) -> Result<Self, Self::Error> {
-        let n = u64::try_from(i)?;
-        if n > u8::MAX as u64 {
-            Err(TryFromIntError("u8"))
-        } else {
-            Ok(n as u8)
-        }
+        u64::try_from(i).and_then(|n| u8::try_from(n).map_err(|_| TryFromIntError("u8")))
     }
 }
 
@@ -623,6 +623,7 @@ impl From<Int> for i128 {
 pub struct TryFromIntError(&'static str);
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl fmt::Display for TryFromIntError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -631,5 +632,6 @@ impl fmt::Display for TryFromIntError {
 }
 
 #[cfg(not(feature = "certified_subset"))]
+// Excluded from coverage — see lib.rs for rationale.
 #[cfg_attr(coverage_nightly, coverage(off))]
 impl core::error::Error for TryFromIntError {}

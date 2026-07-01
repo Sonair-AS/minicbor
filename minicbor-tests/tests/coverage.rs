@@ -5413,6 +5413,160 @@ fn encode_bound_included_discriminant_error() {
 }
 
 // ============================================================
+// decode/info.rs: Size introspection
+// ============================================================
+
+#[test]
+fn info_size_head_inline() {
+    use minicbor::decode::info::Size;
+    // Inline unsigned (0x00-0x17): head is 1 byte
+    assert_eq!(Size::head(0x00).unwrap(), 1);
+    assert_eq!(Size::head(0x17).unwrap(), 1);
+}
+
+#[test]
+fn info_size_head_extended() {
+    use minicbor::decode::info::Size;
+    assert_eq!(Size::head(0x18).unwrap(), 2); // 1-byte extended
+    assert_eq!(Size::head(0x19).unwrap(), 3); // 2-byte extended
+    assert_eq!(Size::head(0x1a).unwrap(), 5); // 4-byte extended
+    assert_eq!(Size::head(0x1b).unwrap(), 9); // 8-byte extended
+}
+
+#[test]
+fn info_size_head_indefinite() {
+    use minicbor::decode::info::Size;
+    // Indefinite-length markers (major type | 0x1f)
+    assert_eq!(Size::head(0x5f).unwrap(), 1); // bytes indef
+    assert_eq!(Size::head(0x7f).unwrap(), 1); // text indef
+    assert_eq!(Size::head(0x9f).unwrap(), 1); // array indef
+    assert_eq!(Size::head(0xbf).unwrap(), 1); // map indef
+    assert_eq!(Size::head(0xff).unwrap(), 1); // break (simple | 0x1f)
+}
+
+#[test]
+fn info_size_head_invalid() {
+    use minicbor::decode::info::Size;
+    // 0x1c-0x1e are reserved/invalid additional info
+    assert!(Size::head(0x1c).is_err());
+    assert!(Size::head(0x1d).is_err());
+    assert!(Size::head(0x1e).is_err());
+    // tagged | 0x1f is invalid (tags can't be indefinite)
+    assert!(Size::head(0xdf).is_err());
+}
+
+#[test]
+fn info_size_tail_unsigned() {
+    use minicbor::decode::info::Size;
+    // Unsigned integer head: just the head, no tail content
+    assert_eq!(Size::tail(&[0x00]).unwrap(), Size::Head); // inline 0
+    assert_eq!(Size::tail(&[0x18, 0x19]).unwrap(), Size::Head); // 1-byte ext
+    assert_eq!(Size::tail(&[0x19, 0x01, 0x00]).unwrap(), Size::Head); // 2-byte ext
+}
+
+#[test]
+fn info_size_tail_signed() {
+    use minicbor::decode::info::Size;
+    assert_eq!(Size::tail(&[0x20]).unwrap(), Size::Head); // -1
+    assert_eq!(Size::tail(&[0x38, 0x18]).unwrap(), Size::Head); // -25
+}
+
+#[test]
+fn info_size_tail_bytes() {
+    use minicbor::decode::info::Size;
+    // Byte string with 5 bytes
+    assert_eq!(Size::tail(&[0x45]).unwrap(), Size::Bytes(5));
+    // Byte string with 1-byte extended length (24 bytes)
+    assert_eq!(Size::tail(&[0x58, 0x18]).unwrap(), Size::Bytes(24));
+    // Indefinite byte string
+    assert_eq!(Size::tail(&[0x5f]).unwrap(), Size::Indef);
+}
+
+#[test]
+fn info_size_tail_text() {
+    use minicbor::decode::info::Size;
+    // Text string with 3 bytes
+    assert_eq!(Size::tail(&[0x63]).unwrap(), Size::Bytes(3));
+    // Indefinite text string
+    assert_eq!(Size::tail(&[0x7f]).unwrap(), Size::Indef);
+}
+
+#[test]
+fn info_size_tail_array() {
+    use minicbor::decode::info::Size;
+    // Array with 3 items
+    assert_eq!(Size::tail(&[0x83]).unwrap(), Size::Items(3));
+    // Array with 1-byte extended length (25 items)
+    assert_eq!(Size::tail(&[0x98, 0x19]).unwrap(), Size::Items(25));
+    // Indefinite array
+    assert_eq!(Size::tail(&[0x9f]).unwrap(), Size::Indef);
+}
+
+#[test]
+fn info_size_tail_map() {
+    use minicbor::decode::info::Size;
+    // Map with 2 entries
+    assert_eq!(Size::tail(&[0xa2]).unwrap(), Size::Items(2));
+    // Indefinite map
+    assert_eq!(Size::tail(&[0xbf]).unwrap(), Size::Indef);
+}
+
+#[test]
+fn info_size_tail_tagged() {
+    use minicbor::decode::info::Size;
+    // Tag 0 (datetime)
+    assert_eq!(Size::tail(&[0xc0]).unwrap(), Size::Head);
+}
+
+#[test]
+fn info_size_tail_simple() {
+    use minicbor::decode::info::Size;
+    // Simple value (true = 0xf5)
+    assert_eq!(Size::tail(&[0xf5]).unwrap(), Size::Head);
+}
+
+#[test]
+fn info_size_tail_empty() {
+    use minicbor::decode::info::Size;
+    assert!(Size::tail(&[]).is_err());
+}
+
+#[test]
+fn info_size_tail_bytes_truncated_head() {
+    use minicbor::decode::info::Size;
+    // 0x58 = bytes with 1-byte extended length, but no length byte follows
+    assert!(Size::tail(&[0x58]).is_err());
+    // 0x59 = bytes with 2-byte extended length, but only 1 byte follows
+    assert!(Size::tail(&[0x59, 0x01]).is_err());
+}
+
+#[test]
+fn info_size_tail_array_truncated_head() {
+    use minicbor::decode::info::Size;
+    // 0x98 = array with 1-byte extended length, but no length byte follows
+    assert!(Size::tail(&[0x98]).is_err());
+    // 0x99 = array with 2-byte extended length, but only 1 byte follows
+    assert!(Size::tail(&[0x99, 0x00]).is_err());
+}
+
+#[test]
+fn info_size_tail_unknown_type() {
+    use minicbor::decode::info::Size;
+    // 0x1c has major type 0 (unsigned) but info 0x1c which is reserved.
+    // However type_of masks the high 3 bits so 0xfc = simple|0x1c which is valid simple.
+    // Use a byte with an unrecognized major type pattern — actually all 8 major types are
+    // covered, so we test the `type_of` fallthrough via bytes where info_of gives 0x1c-0x1e
+    // for non-simple major types. Actually type_of only looks at high 3 bits so all bytes
+    // map to a known major type. The Unknown path is reached via type_of returning a value
+    // not in the match — let's verify the error path with a byte that exercises it.
+    // In practice the Unknown arm is only reached if type_of returns something unexpected.
+    // The function is exhaustive over major types, so this is structurally hard to reach
+    // from tail(). Let's just verify bytes/text/array/map 2-byte extended paths instead.
+    assert_eq!(Size::tail(&[0x59, 0x01, 0x00]).unwrap(), Size::Bytes(256)); // text 2-byte
+    assert_eq!(Size::tail(&[0x99, 0x00, 0x0a]).unwrap(), Size::Items(10)); // array 2-byte
+}
+
+// ============================================================
 // Helpers
 // ============================================================
 

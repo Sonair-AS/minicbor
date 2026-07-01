@@ -84,8 +84,8 @@ impl<'b> Decoder<'b> {
     pub fn u16(&mut self) -> Result<u16, Error> {
         let p = self.pos;
         match self.read()? {
-            n @ 0 ..= 0x17 => Ok(n as u16),
-            0x18           => self.read().map(|n| n as u16),
+            n @ 0 ..= 0x17 => Ok(u16::from(n)),
+            0x18           => self.read().map(u16::from),
             0x19           => self.read_array().map(u16::from_be_bytes),
             0x1a           => self.read_array().map(u32::from_be_bytes).and_then(|n| try_as(n, "when converting u32 to u16", p)),
             0x1b           => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to u16", p)),
@@ -97,9 +97,9 @@ impl<'b> Decoder<'b> {
     pub fn u32(&mut self) -> Result<u32, Error> {
         let p = self.pos;
         match self.read()? {
-            n @ 0 ..= 0x17 => Ok(n as u32),
-            0x18           => self.read().map(|n| n as u32),
-            0x19           => self.read_array().map(u16::from_be_bytes).map(|n| n as u32),
+            n @ 0 ..= 0x17 => Ok(u32::from(n)),
+            0x18           => self.read().map(u32::from),
+            0x19           => self.read_array().map(u16::from_be_bytes).map(u32::from),
             0x1a           => self.read_array().map(u32::from_be_bytes),
             0x1b           => self.read_array().map(u64::from_be_bytes).and_then(|n| try_as(n, "when converting u64 to u32", p)),
             b              => Err(Error::type_mismatch(self.type_of(b)?).at(p).with_message("expected u32"))
@@ -461,6 +461,7 @@ impl<'b> Decoder<'b> {
 
     /// Skip over the current CBOR value.
     #[cfg(feature = "alloc")]
+    // Excluded from coverage — see lib.rs for rationale.
     #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn skip(&mut self) -> Result<(), Error> {
         // Unless we encounter indefinite-length arrays or maps inside of regular
@@ -633,10 +634,10 @@ impl<'b> Decoder<'b> {
     /// Decode a `u64` value beginning with `b`.
     pub(crate) fn unsigned(&mut self, b: u8, p: usize) -> Result<u64, Error> {
         match b {
-            n @ 0 ..= 0x17 => Ok(n as u64),
-            0x18 => self.read().map(|n| n as u64),
-            0x19 => self.read_array().map(u16::from_be_bytes).map(|n| n as u64),
-            0x1a => self.read_array().map(u32::from_be_bytes).map(|n| n as u64),
+            n @ 0 ..= 0x17 => Ok(u64::from(n)),
+            0x18 => self.read().map(u64::from),
+            0x19 => self.read_array().map(u16::from_be_bytes).map(u64::from),
+            0x1a => self.read_array().map(u32::from_be_bytes).map(u64::from),
             0x1b => self.read_array().map(u64::from_be_bytes),
             _    => Err(Error::type_mismatch(self.type_of(b)?)
                 .with_message("expected u64")
@@ -1099,7 +1100,7 @@ fn f64_from_be_bytes(bytes: [u8; 8]) -> f64 {
     unsafe { core::mem::transmute(bits) }
 }
 
-#[allow(unnecessary_transmutes)] // transmute used instead of char::from_u32_unchecked() for const-compatibility with Ferrocene toolchain
+#[allow(unnecessary_transmutes)] // transmute used instead of char::from_u32() — not available in Ferrocene's certified libcore
 fn char_from_u32(n: u32) -> Option<char> {
     if n > 0x10FFFF || (n >= 0xD800 && n <= 0xDFFF) {
         None
