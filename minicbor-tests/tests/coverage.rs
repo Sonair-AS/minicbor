@@ -2092,6 +2092,42 @@ fn encode_map_iter_inexact() {
     assert_eq!(pairs, vec![(1, 10), (2, 20)]);
 }
 
+// MapIter::encode(): v.encode(e, ctx)? fails (map header and key fit, the value does not)
+#[test]
+fn encode_map_iter_value_error() {
+    use minicbor::encode::MapIter;
+    let mut buf = [0u8; 2];
+    let mut enc = Encoder::new(&mut buf[..]);
+    assert!(enc.encode(MapIter::new([(1u8, 2u8)].into_iter())).is_err());
+}
+
+// MapIter::encode(): e.end()? fails for an inexact size (begin, key and value fit, the break does not)
+#[test]
+fn encode_map_iter_inexact_end_error() {
+    use minicbor::encode::MapIter;
+    let mut buf = [0u8; 3];
+    let mut enc = Encoder::new(&mut buf[..]);
+    assert!(enc.encode(MapIter::new([(1u8, 2u8)].into_iter().filter(|_| true))).is_err());
+}
+
+// MapIter::next(): V::decode(d, &mut ())? fails after the key decodes ({1: "x"} as map<u8, u8>)
+#[test]
+fn decoder_map_iter_value_error() {
+    let input = [0xa1, 0x01, 0x61, b'x'];
+    let mut d = Decoder::new(&input);
+    let mut iter = d.map_iter::<u8, u8>().unwrap();
+    assert!(iter.next().unwrap().unwrap_err().is_type_mismatch());
+}
+
+// MapIter::next(): K::decode(d, &mut ())? fails ({"x": 1} as map<u8, u8>)
+#[test]
+fn decoder_map_iter_key_error() {
+    let input = [0xa1, 0x61, b'x', 0x01];
+    let mut d = Decoder::new(&input);
+    let mut iter = d.map_iter::<u8, u8>().unwrap();
+    assert!(iter.next().unwrap().unwrap_err().is_type_mismatch());
+}
+
 // ============================================================
 // data.rs: Tagged::deref_mut, Int Display, TryFrom overflow
 // ============================================================
